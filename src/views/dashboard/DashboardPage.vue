@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import {
   Bot,
   ClipboardCheck,
@@ -14,6 +14,26 @@ import TrendChart from './components/TrendChart.vue'
 import RankingList from './components/RankingList.vue'
 import ActivityFeed from './components/ActivityFeed.vue'
 import type { DashboardStats } from '@types'
+
+const now = ref(new Date())
+
+let timer: ReturnType<typeof setInterval>
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = new Date()
+  }, 1000)
+})
+onUnmounted(() => clearInterval(timer))
+
+const formatTime = (d: Date) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  const s = String(d.getSeconds()).padStart(2, '0')
+  return `Data\nYear:${y} Month:${m} Day:${day}\n${h}:${min}:${s}`
+}
 
 const stats = ref<DashboardStats>({
   totalAgents: 0,
@@ -90,10 +110,12 @@ const trendIcon = (t: string) => {
         <h1 class="text-2xl font-bold font-heading">仪表盘</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Agent评测概览与实时数据</p>
       </div>
-      <button class="btn-primary">
-        <Zap :size="16" />
-        新建评测
-      </button>
+      <p
+        class="text-xl text-gray-700 dark:text-gray-200 leading-snug whitespace-pre-line text-center"
+        style="font-family: 'Great Vibes', cursive; text-shadow: 1px 1px 3px rgba(0,0,0,0.12), 1px 2px 6px rgba(0,0,0,0.06);"
+      >
+        {{ formatTime(now) }}
+      </p>
     </div>
 
     <!-- Stats Row -->

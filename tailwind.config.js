@@ -29,6 +29,7 @@ export default {
         heading: ['Space Grotesk', 'sans-serif'],
         body: ['DM Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        script: ['Dancing Script', 'cursive'],
       },
       borderRadius: {
         'bento': '24px',

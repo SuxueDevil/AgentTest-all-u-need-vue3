@@ -20,6 +20,14 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
+  .bg-glass-light {
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.7) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, rgba(210,210,220,0.5) 0%, transparent 50%),
+      #e5e7eb;
+    background-attachment: fixed;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
@@ -144,7 +152,26 @@
 
   /* ===== Buttons ===== */
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-ai-purple px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-ai-purple-dark active:scale-95;
+    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95;
+  }
+
+  html:not(.dark) .btn-primary {
+    @apply text-gray-800 border border-white/60;
+    background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25));
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+
+  html:not(.dark) .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  :is(.dark) .btn-primary {
+    @apply bg-black/25 text-white border border-white/10 shadow-sm;
+  }
+
+  :is(.dark) .btn-primary:hover {
+    @apply bg-black/40 border-white/20;
   }
 
   .btn-secondary {
