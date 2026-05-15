@@ -1,38 +1,39 @@
 /**
- * Agent API 模块
- * =============================================================================
- * 【Java 类比】≈ 一个 Service 类，封装对 /api/agents 的所有 HTTP 调用
- *   每个方法 ≈ 一个用 @FeignClient 或 RestTemplate 的远程调用
- *
- * 参数和返回值的类型来自 @types（即 src/types/agent.ts），
- * 这样 API 层和业务层的类型保持同步，类似 Java 中共享 DTO 类。
+ * Agent API 模块 — 封装 /api/agents 的所有 HTTP 请求。
+ * 每个方法对应后端 AgentController 的一个接口。
+ * 调用方通过 agentApi.xxx() 发起请求，返回值已经过 client.ts 响应拦截器解包。
  */
 import { get, post, put, del } from '@api/client'
-import type { Agent, AgentQueryParams } from '@types'
+import type { Agent, AgentQueryParams, PageResult } from '@types'
 
 export const agentApi = {
-  /** 分页查询 Agent 列表 */
+  /** GET /api/agents — 分页查询，支持 keyword/type/status 筛选 */
   list(params: AgentQueryParams) {
-    return get<{ data: Agent[]; total: number }>('/agents', { params })
+    return get<PageResult<Agent>>('/agents', { params })
   },
-  /** 查询单个 Agent 详情 */
-  detail(id: string) {
+
+  /** GET /api/agents/:id — 查询详情 */
+  detail(id: number) {
     return get<Agent>(`/agents/${id}`)
   },
-  /** 创建 Agent */
+
+  /** POST /api/agents — 创建 Agent */
   create(data: Partial<Agent>) {
     return post<Agent>('/agents', data)
   },
-  /** 更新 Agent */
-  update(id: string, data: Partial<Agent>) {
+
+  /** PUT /api/agents/:id — 更新 Agent（支持部分更新） */
+  update(id: number, data: Partial<Agent>) {
     return put<Agent>(`/agents/${id}`, data)
   },
-  /** 删除 Agent */
-  remove(id: string) {
+
+  /** DELETE /api/agents/:id — 删除 Agent */
+  remove(id: number) {
     return del<void>(`/agents/${id}`)
   },
-  /** 对 Agent 发起评测 */
-  evaluate(id: string, datasetId: string) {
-    return post<{ taskId: string }>(`/agents/${id}/evaluate`, { datasetId })
+
+  /** POST /api/agents/:id/test-connection — 向 Agent endpoint 发送 ping 测试连通性 */
+  testConnection(id: number) {
+    return post<boolean>(`/agents/${id}/test-connection`)
   },
 }

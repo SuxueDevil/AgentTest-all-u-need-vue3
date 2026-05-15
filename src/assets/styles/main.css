@@ -54,7 +54,6 @@
     background: #3D3D5A;
   }
 
-  /* Light mode scrollbar */
   html:not(.dark) ::-webkit-scrollbar-thumb {
     background: #CBD5E1;
     border-radius: 3px;
@@ -66,15 +65,9 @@
 }
 
 @layer components {
-  /* ===== Glass Card ===== */
+  /* ===== Glass Card — 毛玻璃卡片 ===== */
   .glass-card {
     @apply rounded-2xl border backdrop-blur-lg transition-all duration-300;
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.08);
-  }
-
-  :is(.dark) .glass-card {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.05);
     box-shadow: 0 8px 32px rgba(124, 58, 237, 0.08);
@@ -100,7 +93,7 @@
     box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12);
   }
 
-  /* ===== Bento Card ===== */
+  /* ===== Bento Card — Bento 布局卡片 ===== */
   .bento-card {
     @apply rounded-bento border p-6 transition-all duration-300;
     border-color: rgba(255, 255, 255, 0.1);
@@ -133,7 +126,7 @@
     box-shadow: 0 12px 40px rgba(124, 58, 237, 0.10);
   }
 
-  /* ===== Stat Value ===== */
+  /* ===== Stat Value — 渐变色统计数字 ===== */
   .stat-value {
     font-family: 'Space Grotesk', system-ui, sans-serif;
     @apply text-3xl font-bold;
@@ -150,44 +143,55 @@
     background-clip: text;
   }
 
-  /* ===== Buttons ===== */
-  .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95;
-  }
-
-  html:not(.dark) .btn-primary {
-    @apply text-gray-800 border border-white/60;
-    background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25));
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
-  }
-
-  html:not(.dark) .btn-primary:hover {
-    background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
-  }
-
-  :is(.dark) .btn-primary {
-    @apply bg-black/25 text-white border border-white/10 shadow-sm;
-  }
-
-  :is(.dark) .btn-primary:hover {
-    @apply bg-black/40 border-white/20;
-  }
+  /** ──────────────── 按钮 / 输入框 统一样式 ────────────────
+   * btn-secondary 与 input-field 视觉完全一致：
+   *   圆角 rounded-xl / 边框 + 毛玻璃背景 / hover 变紫
+   * 区别仅在于：
+   *   btn-secondary — inline-flex + gap-2（按钮图标排列）
+   *   input-field   — w-full + focus:ring（输入框通栏 + 聚焦提示）
+   */
 
   .btn-secondary {
     @apply inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200;
   }
 
   :is(.dark) .btn-secondary {
-    @apply border-ai-border bg-ai-card text-gray-300 hover:border-ai-purple/30 hover:text-white;
+    @apply border-ai-border bg-ai-card text-gray-300 hover:border-ai-purple/30 hover:text-white disabled:opacity-40;
   }
 
   html:not(.dark) .btn-secondary {
-    @apply border-gray-300 bg-white/60 text-gray-700 hover:border-ai-purple/50 hover:text-ai-purple;
+    @apply border-gray-300 bg-white/60 text-gray-700 hover:border-ai-purple/50 hover:text-ai-purple disabled:opacity-40;
     backdrop-filter: blur(8px);
   }
 
-  /* ===== Badges ===== */
+  .input-field {
+    @apply w-full rounded-xl border pl-4 pr-8 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ai-purple/30;
+  }
+
+  :is(.dark) .input-field {
+    @apply border-ai-border bg-ai-card text-gray-300 placeholder:text-gray-500 hover:border-ai-purple/30;
+  }
+
+  html:not(.dark) .input-field {
+    @apply border-gray-300 bg-white/60 text-gray-700 placeholder:text-gray-400 hover:border-ai-purple/50;
+    backdrop-filter: blur(8px);
+  }
+
+  /* 移除原生下拉箭头，用内联 SVG 替代，确保位置可控 */
+  select.input-field {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 0.75rem;
+  }
+
+  :is(.dark) select.input-field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  /* ===== Badges — 状态标签 ===== */
   .badge {
     @apply inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium;
   }
@@ -223,27 +227,18 @@
   }
 
   @keyframes glow {
-    0% {
-      box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
-    }
-    100% {
-      box-shadow: 0 0 40px rgba(124, 58, 237, 0.6);
-    }
+    0%   { box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); }
+    100% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.6); }
   }
 
   @keyframes slideUp {
-    0% {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    0%   { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0);   opacity: 1; }
   }
 
   @keyframes fadeIn {
-    0% { opacity: 0; }
+    0%   { opacity: 0; }
     100% { opacity: 1; }
   }
 }
+

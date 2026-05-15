@@ -24,11 +24,11 @@
  *   - 在 <template> 中自动 .value，所以模板里直接写 theme 即可
  */
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
   /**
-   * 主题状态 — 从 localStorage 读取，默认 light
+   * 主题状态 — 从 localStorage 读取，默认 dark
    * ---------------------------------------------------------------------------
    * 泛型 ref<'dark' | 'light'> = 这个 ref 只能是 'dark' 或 'light'
    * 相当于 Java 的：AtomicReference<Theme> where Theme is enum { DARK, LIGHT }
@@ -39,47 +39,41 @@ export const useAppStore = defineStore('app', () => {
    *   数据持久化在浏览器中，关闭页面后不丢失
    */
   const theme = ref<'dark' | 'light'>(
-    (localStorage.getItem('theme') as 'dark' | 'light') || 'light'
+    (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
   )
 
-  /**
-   * 应用主题到 DOM
-   * ---------------------------------------------------------------------------
-   * 通过操控 <html> 的 class 和 <body> 的 class 来切换主题。
-   * Tailwind CSS 的 dark: 前缀就是靠 <html class="dark"> 来触发的。
-   */
+  /** 应用主题到 <html> class，触发 Tailwind dark: 变体 */
   function applyTheme(t: 'dark' | 'light') {
     const root = document.documentElement
+    root.classList.remove('dark')
+    document.body.classList.remove('bg-ai-surface', 'text-white', 'bg-gray-100', 'text-gray-900')
+
     if (t === 'dark') {
       root.classList.add('dark')
       document.body.classList.add('bg-ai-surface', 'text-white')
-      document.body.classList.remove('bg-gray-100', 'text-gray-900')
     } else {
-      root.classList.remove('dark')
       document.body.classList.add('bg-gray-100', 'text-gray-900')
-      document.body.classList.remove('bg-ai-surface', 'text-white')
     }
   }
 
-  /**
-   * 切换主题 — 同时更新内存状态和本地持久化
-   */
   function setTheme(t: 'dark' | 'light') {
     theme.value = t
     localStorage.setItem('theme', t)
     applyTheme(t)
   }
 
-  // 初始化时应用一次主题
+  /** 切换暗黑/明亮主题 */
+  function toggleTheme() {
+    setTheme(theme.value === 'dark' ? 'light' : 'dark')
+  }
+
   applyTheme(theme.value)
 
-  /**
-   * 返回值 — Store 对外暴露的"公共 API"
-   * ---------------------------------------------------------------------------
-   * return 的对象就是 Store 的公共接口。
-   * theme 是状态（可读可写），setTheme 是操作方法。
-   * 相当于 Java 类中 public field + public method，
-   * 但 theme 是响应式的（修改会自动通知所有订阅者）。
-   */
-  return { theme, setTheme }
+  const sidebarCollapsed = ref(false)
+
+  function toggleSidebar() {
+    sidebarCollapsed.value = !sidebarCollapsed.value
+  }
+
+  return { theme, setTheme, toggleTheme, sidebarCollapsed, toggleSidebar }
 })

@@ -16,6 +16,7 @@ import StatusBadge from './common/StatusBadge.vue'
 import DataTable from './common/DataTable.vue'
 import LoadingSpinner from './common/LoadingSpinner.vue'
 import EmptyState from './common/EmptyState.vue'
+import DropdownSelect from './common/DropdownSelect.vue'
 
 /**
  * 注册全局组件
@@ -30,6 +31,7 @@ export function registerGlobalComponents(app: App) {
   app.component('DataTable', DataTable)
   app.component('LoadingSpinner', LoadingSpinner)
   app.component('EmptyState', EmptyState)
+  app.component('DropdownSelect', DropdownSelect)
 }
 
 // 同时保留命名导出，方便需要显式 import 的场景

@@ -1,85 +1,90 @@
 /**
- * 评测相关的类型定义
- * =============================================================================
+ * 评测任务类型定义 — 对齐 5 表设计中的 evaluation_task / evaluation_result。
+ * questionIds/agentIds/dimensions 用 JSON 列，无独立 dataset 表。
  */
 
-/** 评测任务 */
-export interface EvaluationTask {
-  id: string
+/** 维度配置 — 对应 evaluation_task.dimensions JSON */
+export interface DimensionConfig {
+  /** 维度标识（如 accuracy） */
   name: string
-  datasetId: string
-  datasetName: string
-  /** 参与评测的 Agent ID 列表 */
-  agentIds: string[]
-  agentNames: string[]
-  status: TaskStatus
-  /** 进度 0-100 */
-  progress: number
-  /** 各项评测指标 */
-  metrics: EvalMetrics[]
-  createdAt: string
-  /** ? 表示可选 — 任务未完成时为 undefined */
-  completedAt?: string
-}
-
-/** 任务状态 */
-export type TaskStatus = 'pending' | 'running' | 'completed' | 'cancelled' | 'failed'
-
-/** 评测指标维度 */
-export interface EvalMetrics {
-  name: string
-  /** 得分 0-1 */
-  score: number
-  /** 权重 0-1，所有指标权重之和为 1 */
+  /** 显示名称（如 准确性） */
+  displayName: string
+  /** 权重 0-1 */
   weight: number
   /** 通过阈值 0-1 */
   threshold: number
 }
 
-/** 评测结果 — 单次评测的输出 */
-export interface EvalResult {
-  id: string
-  taskId: string
-  agentId: string
-  agentName: string
-  /** 综合得分 0-1 */
-  score: number
-  /** 排名 */
-  rank: number
-  /**
-   * 详细得分明细
-   * Record<string, number> = 键值对 { [key: string]: number }
-   * 【Java 类比】≈ Map<String, Double>
-   * 【Python 类比】≈ dict[str, float]
-   */
-  details: Record<string, number>
-  /** 延迟 (ms) */
-  latency: number
-  /** Token 消耗量 */
-  tokens: number
-  /** 是否通过评测 */
-  passed: boolean
-  evaluatedAt: string
-}
-
-/** 数据集 */
-export interface Dataset {
-  id: string
+/** 评测任务 — 对应 evaluation_task 表 */
+export interface EvaluationTask {
+  id: number
   name: string
   description: string
-  category: DatasetCategory
-  /** 数据集条目数量 */
-  itemCount: number
-  /** 难度等级 */
-  difficulty: 'easy' | 'medium' | 'hard' | 'mixed'
+  /** 题目 ID 列表 */
+  questionIds: number[]
+  /** 参评 Agent ID 列表 */
+  agentIds: number[]
+  /** 参评 LLM ID 列表 */
+  llmIds?: number[]
+  /** 维度配置 */
+  dimensions: DimensionConfig[]
+  /** 题目总数 */
+  questionCount: number
+  /** 已完成数 */
+  completedCount: number
+  status: TaskStatus
   createdAt: string
+  startedAt?: string
+  completedAt?: string
 }
 
-/** 数据集类别 */
-export type DatasetCategory =
-  | 'reasoning'
-  | 'coding'
-  | 'qa'
-  | 'translation'
-  | 'summarization'
-  | 'tool-calling'
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'cancelled' | 'failed'
+
+/** 查询参数 */
+export interface EvaluationQueryParams {
+  page: number
+  pageSize: number
+  status?: TaskStatus
+}
+
+/** 进度 — GET /progress */
+export interface TaskProgress {
+  status: TaskStatus
+  questionCount: number
+  completedCount: number
+}
+
+/** 维度得分 — 对应 evaluation_result.dimension_scores JSON */
+export interface DimensionScore {
+  dimensionName: string
+  score: number
+  feedback: string
+}
+
+/** 单题结果明细 */
+export interface ResultItem {
+  questionId: number
+  questionTitle: string
+  /** 多轮对话轮次序号（1-based），单轮为 null */
+  turnOrder?: number
+  score: number
+  passed: boolean
+  latencyMs: number
+  tokensUsed: number
+  /** Agent 原始回答（截断前500字） */
+  rawResponse: string
+  /** 各维度得分 + Judge 反馈理由 */
+  dimensionScores: DimensionScore[]
+}
+
+/** Agent 评测结果 — GET /results 返回 */
+export interface AgentResult {
+  agentId: number
+  agentName: string
+  overallScore: number
+  passed: boolean
+  avgLatencyMs: number
+  totalTokens: number
+  dimensionScores: DimensionScore[]
+  items: ResultItem[]
+}
