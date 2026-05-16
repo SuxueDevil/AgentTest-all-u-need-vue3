@@ -36,7 +36,7 @@ const editTarget = ref<Question | null>(null)
 /** AI 生成弹窗 */
 const showGenerateDialog = ref(false)
 const generating = ref(false)
-const genForm = ref({ category: 'reasoning', difficulty: 'medium', questionType: 'single', count: 5 })
+const genForm = ref({ category: 'reasoning', difficulty: 'medium', questionType: 'single', count: 5, topic: '' })
 
 // ==================== 表单状态 ====================
 
@@ -528,8 +528,23 @@ const deleteMessage = computed(() => {
             </select>
           </div>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主题（可选）</label>
+          <input v-model="genForm.topic" class="input-field text-sm" placeholder="如 医疗问诊、金融分析、法律咨询" />
+          <div class="flex flex-wrap gap-1 mt-1.5">
+            <button v-for="t in ['医疗问诊','金融分析','法律咨询','编程面试','客户服务','教育培训']" :key="t"
+              class="text-xs px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:border-ai-purple hover:text-ai-purple transition-colors"
+              @click="genForm.topic = t"
+            >{{ t }}</button>
+          </div>
+        </div>
+        <!-- 生成进度 -->
+        <div v-if="generating" class="flex items-center gap-3 py-3 px-4 rounded-lg bg-ai-purple/5 border border-ai-purple/20">
+          <div class="w-5 h-5 border-2 border-ai-purple border-t-transparent rounded-full animate-spin" />
+          <span class="text-sm text-ai-purple">AI 正在生成题目，请稍候...</span>
+        </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button class="btn-secondary" @click="showGenerateDialog = false">取消</button>
+          <button class="btn-secondary" @click="showGenerateDialog = false" :disabled="generating">取消</button>
           <button class="btn-secondary" :disabled="generating" @click="handleGenerate">
             {{ generating ? '生成中...' : '生成' }}
           </button>

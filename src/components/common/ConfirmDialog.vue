@@ -24,6 +24,8 @@ defineProps<{
   confirmText?: string
   /** 取消按钮文字，默认"取消" */
   cancelText?: string
+  /** 加载中，禁用按钮防止重复提交 */
+  loading?: boolean
 }>()
 
 /** 事件: confirm — 用户点击确认；cancel — 用户点击取消或遮罩 */
@@ -41,8 +43,10 @@ const emit = defineEmits<{
       <p class="text-sm text-gray-500 dark:text-gray-400">{{ message || '确定要执行此操作吗？' }}</p>
       <!-- 按钮区 -->
       <div class="flex justify-end gap-3 pt-2">
-        <button class="btn-secondary" @click="emit('cancel')">{{ cancelText || '取消' }}</button>
-        <button class="btn-primary bg-red-500 hover:bg-red-600" @click="emit('confirm')">{{ confirmText || '确认' }}</button>
+        <button class="btn-secondary" :disabled="loading" @click="emit('cancel')">{{ cancelText || '取消' }}</button>
+        <button class="btn-primary bg-red-500 hover:bg-red-600" :disabled="loading" @click="emit('confirm')">
+          {{ loading ? '处理中...' : (confirmText || '确认') }}
+        </button>
       </div>
     </div>
   </div>

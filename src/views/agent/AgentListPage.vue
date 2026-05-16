@@ -52,7 +52,7 @@ const editTarget = ref<Agent | null>(null)
 /** 表单绑定数据 */
 const form = ref({
   name: '', description: '', model: '', type: 'llm',
-  endpointUrl: '', requestBody: '', responseProtocol: 'auto', responseContentPath: '',
+  endpointUrl: '', requestBody: '', responseProtocol: 'sse', responseContentPath: 'choices[0].delta.content',
   authType: 'none', authCredential: '',
 })
 /** 鉴权凭证 placeholder，custom 模式显示 JSON 示例 */
@@ -64,6 +64,13 @@ const authPlaceholder = computed(() => {
 const submitting = ref(false)
 /** 表单校验错误 */
 const formError = ref('')
+
+/** 协议切换自动填入答案位置 */
+watch(() => form.value.responseProtocol, (val) => {
+  if (val === 'sse') form.value.responseContentPath = 'choices[0].delta.content'
+  else if (val === 'json') form.value.responseContentPath = 'choices[0].message.content'
+  else form.value.responseContentPath = ''
+})
 
 /** 名称关键词匹配描述 — 新建时自动填入 */
 watch(() => form.value.name, (name) => {
@@ -121,7 +128,7 @@ function openCreate() {
   formError.value = ''
   editTarget.value = null
   form.value = { name: '', description: '', model: '', type: 'llm',
-    endpointUrl: '', requestBody: '', responseProtocol: 'auto', responseContentPath: '', authType: 'none', authCredential: '' }
+    endpointUrl: '', requestBody: '', responseProtocol: 'sse', responseContentPath: 'choices[0].delta.content', authType: 'none', authCredential: '' }
   showCreateDialog.value = true
 }
 
@@ -138,7 +145,7 @@ function openEdit(agent: Agent) {
     type: agent.type,
     endpointUrl: agent.endpointUrl || '',
     requestBody: agent.requestBody || '',
-    responseProtocol: agent.responseProtocol || 'auto',
+    responseProtocol: agent.responseProtocol || 'sse',
     responseContentPath: agent.responseContentPath || '',
     authType: agent.authType || 'none',
     authCredential: '',                                         // 编辑时不回填凭证
@@ -309,9 +316,11 @@ function onPageChange(page: number) {
 
     <!-- 新建/编辑弹窗 — 点击遮罩关闭 -->
     <div v-if="showCreateDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showCreateDialog = false">
-      <div class="bg-white dark:bg-ai-card rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-lg font-bold">{{ editTarget ? '编辑Agent' : '新建Agent' }}</h2>
+      <div class="bg-white dark:bg-ai-surface rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <h2 v-if="editTarget" class="text-lg font-bold">编辑 Agent</h2>
         <div class="space-y-3">
+          <!-- 基本信息 -->
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white">● 基本信息</h3>
           <!-- 名称 -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">名称 *</label>
@@ -339,6 +348,8 @@ function onPageChange(page: number) {
               </select>
             </div>
           </div>
+          <!-- 请求格式 -->
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white pt-2">● 请求格式</h3>
           <!-- Endpoint -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Endpoint</label>
@@ -349,6 +360,8 @@ function onPageChange(page: number) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">请求模板 JSON <span class="text-xs text-gray-400">（&#123;&#123;messages&#125;&#125; 占位符）</span></label>
             <textarea v-model="form.requestBody" class="input-field" rows="3" placeholder='留空则使用默认 OpenAI 格式' />
           </div>
+          <!-- 响应格式 -->
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white pt-2">● 响应格式</h3>
           <!-- 响应协议 + 提取路径 -->
           <div class="grid grid-cols-3 gap-3">
             <div>
@@ -360,8 +373,8 @@ function onPageChange(page: number) {
               </select>
             </div>
             <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">响应提取路径</label>
-              <input v-model="form.responseContentPath" class="input-field" placeholder="留空默认 choices[0].message.content" />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">答案位置</label>
+              <input v-model="form.responseContentPath" class="input-field" placeholder="自动识别答案所在字段" />
               <div class="flex flex-wrap gap-1 mt-1.5">
                 <button v-for="p in ['choices[0].message.content','choices[0].delta.content','data.text','data.reply','content']" :key="p"
                   class="text-xs px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:border-ai-purple hover:text-ai-purple transition-colors font-mono"

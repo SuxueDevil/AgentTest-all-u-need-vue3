@@ -18,6 +18,7 @@ const agentStore = useAgentStore()
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const deleteTarget = ref<EvaluationTask | null>(null)
+const deleting = ref(false)
 
 // ==================== 筛选 ====================
 
@@ -131,9 +132,12 @@ function confirmDelete(task: EvaluationTask) {
 
 async function handleDelete() {
   if (!deleteTarget.value) return
-  await evalStore.deleteTask(deleteTarget.value.id)
-  showDeleteDialog.value = false
-  deleteTarget.value = null
+  deleting.value = true
+  try {
+    await evalStore.deleteTask(deleteTarget.value.id)
+    showDeleteDialog.value = false
+    deleteTarget.value = null
+  } finally { deleting.value = false }
 }
 
 async function handleStart(task: EvaluationTask) {
@@ -352,6 +356,7 @@ const totalWeight = computed(() =>
       :show="showDeleteDialog"
       title="确认删除"
       :message="`确定要删除任务「${deleteTarget?.name}」吗？此操作不可撤销。`"
+      :loading="deleting"
       @confirm="handleDelete"
       @cancel="showDeleteDialog = false"
     />
