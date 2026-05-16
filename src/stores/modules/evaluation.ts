@@ -103,6 +103,11 @@ export const useEvaluationStore = defineStore('evaluation', () => {
    * 取消评测。
    * 【Java 类比】≈ EvaluationServiceImpl.cancel(id)，中断正在执行的任务
    */
+  async function restartTask(id: number) {
+    await evaluationApi.restart(id)
+    await fetchTasks()
+  }
+
   async function cancelTask(id: number) {
     await evaluationApi.cancel(id)
     await fetchTasks()
@@ -129,6 +134,6 @@ export const useEvaluationStore = defineStore('evaluation', () => {
   return {
     tasks, total, loading, currentTask, results, progress, queryParams,
     fetchTasks, fetchTaskDetail, createTask, updateTask, deleteTask,
-    startTask, cancelTask, fetchProgress, fetchResults,
+    startTask, restartTask, cancelTask, fetchProgress, fetchResults,
   }
 })

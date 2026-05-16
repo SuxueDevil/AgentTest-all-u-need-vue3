@@ -42,6 +42,11 @@ export const evaluationApi = {
     return post<void>(`/evaluation/${id}/start`)
   },
 
+  /** POST /api/evaluation/:id/restart — 重新开始 */
+  restart(id: number) {
+    return post<void>(`/evaluation/${id}/restart`)
+  },
+
   /** POST /api/evaluation/:id/cancel — 取消评测 */
   cancel(id: number) {
     return post<void>(`/evaluation/${id}/cancel`)

@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Search, Trash2, Play, Square, X } from 'lucide-vue-next'
+import { Plus, Search, Trash2, Play, Square, RotateCcw } from 'lucide-vue-next'
 import { useEvaluationStore, useQuestionStore, useAgentStore } from '@stores'
 import type { EvaluationTask, TaskStatus, DimensionConfig } from '@types'
 import StatusBadge from '@components/common/StatusBadge.vue'
@@ -25,18 +25,11 @@ const filterStatus = ref('')
 
 // ==================== 新建表单 ====================
 
-/** 表单步骤: 0=基本信息 1=选题 2=选Agent 3=维度配置 */
-const formStep = ref(0)
-
-/**
- * 按钮可继续条件 — 按步骤区分校验，避免前序步骤被后序条件阻塞
- * Step 0 只需名称；Step 1 需要选题；Step 2+ 需要选 Agent
- */
 const canProceed = computed(() => {
   if (submitting.value) return false
   if (!form.value.name) return false
-  if (formStep.value >= 1 && form.value.questionIds.length === 0) return false
-  if (formStep.value >= 2 && form.value.agentIds.length === 0) return false
+  if (form.value.questionIds.length === 0) return false
+  if (form.value.agentIds.length === 0) return false
   return true
 })
 
@@ -79,7 +72,6 @@ onMounted(() => {
 // ==================== 创建任务 ====================
 
 function openCreate() {
-  formStep.value = 0
   form.value = {
     name: '', description: '',
     questionIds: [],
@@ -114,15 +106,6 @@ function removeDimension(index: number) {
   form.value.dimensions.splice(index, 1)
 }
 
-/** 下一步/提交 */
-function nextOrSubmit() {
-  if (formStep.value < 3) {
-    formStep.value++
-  } else {
-    handleSubmit()
-  }
-}
-
 async function handleSubmit() {
   submitting.value = true
   try {
@@ -155,6 +138,10 @@ async function handleDelete() {
 
 async function handleStart(task: EvaluationTask) {
   await evalStore.startTask(task.id)
+}
+
+async function handleRestart(task: EvaluationTask) {
+  await evalStore.restartTask(task.id)
 }
 
 async function handleCancel(task: EvaluationTask) {
@@ -250,6 +237,11 @@ const totalWeight = computed(() =>
             @click="handleCancel(row)"
           ><Square :size="14" /></button>
           <button
+            v-if="row.status === 'completed' || row.status === 'cancelled' || row.status === 'failed'"
+            class="p-1 text-gray-400 hover:text-green-500 rounded" title="重新开始"
+            @click="handleRestart(row)"
+          ><RotateCcw :size="14" /></button>
+          <button
             v-if="row.status !== 'running'"
             class="p-1 text-gray-400 hover:text-red-500 rounded" title="删除"
             @click="confirmDelete(row)"
@@ -277,19 +269,17 @@ const totalWeight = computed(() =>
       <div class="bg-white dark:bg-ai-card rounded-xl shadow-xl w-full max-w-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 class="text-lg font-bold">新建评测任务</h2>
 
-        <!-- 步骤指示器 -->
-        <div class="flex items-center gap-2 text-xs text-gray-400">
-          <span v-for="i in 4" :key="i"
-            class="flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold"
-            :class="formStep >= i - 1 ? 'bg-ai-purple' : 'bg-gray-300 dark:bg-gray-600'"
-          >{{ i }}</span>
-        </div>
-
-        <!-- Step 0: 基本信息 -->
-        <div v-if="formStep === 0" class="space-y-3">
+        <!-- 基本信息 -->
+        <div class="space-y-3">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">任务名称 *</label>
             <input v-model="form.name" class="input-field" placeholder="如 推理能力综合评测" />
+            <div class="flex flex-wrap gap-1 mt-1.5">
+              <button v-for="p in ['推理能力评测','编程能力评测','综合能力评测','翻译质量评测','摘要能力评测','角色认知评测']" :key="p"
+                class="text-xs px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:border-ai-purple hover:text-ai-purple transition-colors"
+                @click="form.name = p"
+              >{{ p }}</button>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">描述</label>
@@ -297,83 +287,62 @@ const totalWeight = computed(() =>
           </div>
         </div>
 
-        <!-- Step 1: 选题 -->
-        <div v-if="formStep === 1" class="space-y-2">
-          <p class="text-sm text-gray-500">已选 {{ form.questionIds.length }} 题</p>
-          <div class="max-h-64 overflow-y-auto space-y-1 border rounded-lg p-2">
-            <div v-for="q in questionStore.questions" :key="q.id"
-              class="flex items-center gap-2 text-sm py-1 px-2 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
-              @click="toggleQuestion(q.id)"
-            >
-              <input type="checkbox" :checked="form.questionIds.includes(q.id)" class="rounded" />
-              <span class="flex-1 truncate">{{ q.title }}</span>
-              <span class="text-xs text-gray-400">{{ q.category }}</span>
+        <!-- 选题 + 选Agent 并排 -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择题目 <span class="text-xs text-gray-400">({{ form.questionIds.length }})</span></label>
+            <div class="max-h-48 overflow-y-auto space-y-0.5 border rounded-lg p-1.5">
+              <div v-for="q in questionStore.questions" :key="q.id"
+                class="flex items-center gap-1.5 text-xs py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
+                @click="toggleQuestion(q.id)"
+              >
+                <input type="checkbox" :checked="form.questionIds.includes(q.id)" class="rounded scale-90" />
+                <span class="flex-1 truncate">{{ q.title }}</span>
+                <span class="text-xs px-1 rounded" :class="q.questionType === 'multi' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'">{{ q.questionType === 'multi' ? '多轮' : '单轮' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择 Agent <span class="text-xs text-gray-400">({{ form.agentIds.length }})</span></label>
+            <div class="max-h-48 overflow-y-auto space-y-0.5 border rounded-lg p-1.5">
+              <div v-for="a in agentStore.agents" :key="a.id"
+                class="flex items-center gap-1.5 text-xs py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
+                @click="toggleAgent(a.id)"
+              >
+                <input type="checkbox" :checked="form.agentIds.includes(a.id)" class="rounded scale-90" />
+                <span class="flex-1">{{ a.name }}</span>
+                <span class="text-xs text-gray-400">{{ a.model }}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 2: 选 Agent -->
-        <div v-if="formStep === 2" class="space-y-2">
-          <p class="text-sm text-gray-500">已选 {{ form.agentIds.length }} 个 Agent</p>
-          <div class="max-h-64 overflow-y-auto space-y-1 border rounded-lg p-2">
-            <div v-for="a in agentStore.agents" :key="a.id"
-              class="flex items-center gap-2 text-sm py-1 px-2 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
-              @click="toggleAgent(a.id)"
-            >
-              <input type="checkbox" :checked="form.agentIds.includes(a.id)" class="rounded" />
-              <span class="flex-1">{{ a.name }}</span>
-              <span class="text-xs text-gray-400">{{ a.model }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 3: 维度配置 -->
-        <div v-if="formStep === 3" class="space-y-2">
+        <!-- 维度配置 -->
+        <div class="space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">权重合计: {{ totalWeight.toFixed(2) }}</span>
-            <button class="text-xs text-ai-purple hover:underline" @click="addDimension">+ 添加维度</button>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">评测维度</label>
+            <span class="text-xs text-gray-400">权重合计: {{ totalWeight.toFixed(2) }}</span>
           </div>
-          <div v-for="(dim, index) in form.dimensions" :key="index"
-            class="border rounded-lg p-3 space-y-2 relative"
-          >
-            <button v-if="form.dimensions.length > 1"
-              class="absolute top-2 right-2 p-0.5 text-gray-400 hover:text-red-500" @click="removeDimension(index)"
-            ><X :size="14" /></button>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-xs text-gray-400">标识</label>
-                <input v-model="dim.name" class="input-field text-sm" placeholder="如 accuracy" />
-              </div>
-              <div>
-                <label class="text-xs text-gray-400">显示名称</label>
-                <input v-model="dim.displayName" class="input-field text-sm" placeholder="如 准确性" />
-              </div>
+          <div class="border rounded-lg p-2 space-y-1.5">
+            <div v-for="(dim, index) in form.dimensions" :key="index"
+              class="grid grid-cols-5 gap-1.5 items-center text-xs"
+            >
+              <input v-model="dim.name" class="input-field text-xs py-1" placeholder="标识" />
+              <input v-model="dim.displayName" class="input-field text-xs py-1" placeholder="名称" />
+              <input v-model.number="dim.weight" type="number" min="0" max="1" step="0.05" class="input-field text-xs py-1" placeholder="权重" />
+              <input v-model.number="dim.threshold" type="number" min="0" max="1" step="0.05" class="input-field text-xs py-1" placeholder="阈值" />
+              <button v-if="form.dimensions.length > 1" class="text-gray-400 hover:text-red-500 text-xs" @click="removeDimension(index)">×</button>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-xs text-gray-400">权重 (0-1)</label>
-                <input v-model.number="dim.weight" type="number" min="0" max="1" step="0.05" class="input-field text-sm" />
-              </div>
-              <div>
-                <label class="text-xs text-gray-400">阈值 (0-1)</label>
-                <input v-model.number="dim.threshold" type="number" min="0" max="1" step="0.05" class="input-field text-sm" />
-              </div>
-            </div>
+            <button class="text-xs text-ai-purple hover:underline" @click="addDimension">+ 添加维度</button>
           </div>
         </div>
 
         <!-- 底部按钮 -->
-        <div class="flex justify-between pt-2">
-          <button v-if="formStep > 0" class="btn-secondary" @click="formStep--">上一步</button>
-          <div v-else />
-          <div class="flex gap-3">
-            <button class="btn-secondary" @click="showCreateDialog = false">取消</button>
-            <button class="btn-secondary" :disabled="!canProceed"
-              @click="nextOrSubmit"
-            >
-              {{ formStep < 3 ? '下一步' : (submitting ? '创建中...' : '创建任务') }}
-            </button>
-          </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button class="btn-secondary" @click="showCreateDialog = false">取消</button>
+          <button class="btn-secondary" :disabled="!canProceed" @click="handleSubmit">
+            {{ submitting ? '创建中...' : '创建任务' }}
+          </button>
         </div>
       </div>
     </div>
