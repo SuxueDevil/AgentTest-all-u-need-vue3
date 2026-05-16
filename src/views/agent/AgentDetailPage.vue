@@ -27,9 +27,16 @@ const authTypeLabels: Record<string, string> = {
   none: '无鉴权', bearer: 'Bearer Token', api_key: 'API Key', basic: 'Basic Auth',
 }
 
+/** 详情加载失败标识（true=接口报错，false=正常） */
+const loadError = ref(false)
+
 /** 页面加载时根据路由参数 id 获取 Agent 详情 */
 onMounted(async () => {
-  await agentStore.fetchAgentDetail(Number(route.params.id))
+  try {
+    await agentStore.fetchAgentDetail(Number(route.params.id))
+  } catch {
+    loadError.value = true
+  }
 })
 
 /** 测试当前 Agent 的 API 连通性 */
@@ -54,7 +61,7 @@ async function handleTestConnection() {
   <!-- 详情内容 -->
   <div v-else-if="agentStore.currentAgent" class="space-y-6">
     <!-- 返回按钮 -->
-    <button class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" @click="router.back()">
+    <button class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" @click="router.push('/agents')">
       <ArrowLeft :size="16" />
       返回列表
     </button>
@@ -141,6 +148,11 @@ async function handleTestConnection() {
     </div>
   </div>
 
+  <!-- 加载出错 -->
+  <div v-else-if="loadError" class="flex flex-col items-center justify-center py-20 text-gray-400">
+    <p class="text-red-400">加载失败，请确认后端服务已启动</p>
+    <button class="btn-secondary mt-4" @click="router.push('/agents')">返回列表</button>
+  </div>
   <!-- Agent 不存在 -->
   <div v-else class="flex flex-col items-center justify-center py-20 text-gray-400">
     <p>Agent 不存在</p>

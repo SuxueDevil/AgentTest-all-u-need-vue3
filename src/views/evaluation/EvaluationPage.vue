@@ -27,6 +27,19 @@ const filterStatus = ref('')
 
 /** 表单步骤: 0=基本信息 1=选题 2=选Agent 3=维度配置 */
 const formStep = ref(0)
+
+/**
+ * 按钮可继续条件 — 按步骤区分校验，避免前序步骤被后序条件阻塞
+ * Step 0 只需名称；Step 1 需要选题；Step 2+ 需要选 Agent
+ */
+const canProceed = computed(() => {
+  if (submitting.value) return false
+  if (!form.value.name) return false
+  if (formStep.value >= 1 && form.value.questionIds.length === 0) return false
+  if (formStep.value >= 2 && form.value.agentIds.length === 0) return false
+  return true
+})
+
 const form = ref({
   name: '', description: '',
   questionIds: [] as number[],
@@ -355,7 +368,7 @@ const totalWeight = computed(() =>
           <div v-else />
           <div class="flex gap-3">
             <button class="btn-secondary" @click="showCreateDialog = false">取消</button>
-            <button class="btn-primary" :disabled="submitting || !form.name || form.questionIds.length === 0 || form.agentIds.length === 0"
+            <button class="btn-secondary" :disabled="!canProceed"
               @click="nextOrSubmit"
             >
               {{ formStep < 3 ? '下一步' : (submitting ? '创建中...' : '创建任务') }}

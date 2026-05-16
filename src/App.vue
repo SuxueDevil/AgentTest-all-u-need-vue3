@@ -7,11 +7,7 @@ const appStore = useAppStore()
 
 <template>
   <AppLayout>
-    <router-view v-slot="{ Component, route }">
-      <transition name="page" mode="out-in">
-        <component :is="Component" :key="route.path" />
-      </transition>
-    </router-view>
+    <router-view />
   </AppLayout>
 </template>
 
