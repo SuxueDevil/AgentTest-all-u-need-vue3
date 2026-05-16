@@ -1,3 +1,11 @@
+<!--
+  侧边导航栏 — 桌面端专用，可折叠。从 NAV_ITEMS 常量渲染导航链接，
+  支持折叠/展开动画，当前路由高亮。
+
+  【Java 类比】≈ Spring MVC 的侧边栏 include + @RequestScope 的 activePath 判断
+    isActive(path) ≈ request.requestURI.startsWith(path) 高亮当前菜单项
+    router.push()  ≈ response.sendRedirect() 跳转页面
+-->
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@stores'
@@ -19,6 +27,7 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 
+/** 图标名 → lucide 组件的映射表 */
 const iconMap: Record<string, Component> = {
   LayoutDashboard,
   Bot,
@@ -29,8 +38,10 @@ const iconMap: Record<string, Component> = {
   Settings,
 }
 
+/** 判断当前路由是否属于指定路径 */
 const isActive = (path: string) => route.path.startsWith(path)
 
+/** 根据常量中的 icon 名称获取 lucide 组件 */
 function getIcon(name: string): Component {
   return iconMap[name] || Bot
 }
@@ -44,7 +55,7 @@ function getIcon(name: string): Component {
       'bg-ai-purple-bg/80 backdrop-blur-lg',
     ]"
   >
-    <!-- Logo -->
+    <!-- Logo 区 — 折叠时只显示图标 -->
     <div class="flex h-16 items-center gap-3 border-b border-ai-border px-4">
       <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ai-purple to-ai-cyan">
         <Bot :size="20" class="text-white" />
@@ -59,7 +70,7 @@ function getIcon(name: string): Component {
       </transition>
     </div>
 
-    <!-- Nav Items -->
+    <!-- 导航菜单 — 从 NAV_ITEMS 常量动态渲染 -->
     <nav class="flex-1 space-y-1 overflow-y-auto p-3">
       <div v-for="item in NAV_ITEMS" :key="item.path">
         <button
@@ -79,7 +90,7 @@ function getIcon(name: string): Component {
       </div>
     </nav>
 
-    <!-- Collapse Toggle -->
+    <!-- 底部折叠/展开按钮 -->
     <div class="border-t border-ai-border p-3">
       <button
         class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-gray-200"

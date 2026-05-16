@@ -1,3 +1,11 @@
+<!--
+  底部导航栏 — 移动端专用，从 NAV_ITEMS 常量渲染图标式导航。
+  固定在页面底部，毛玻璃背景效果。
+
+  【Java 类比】≈ 移动端 TabBar / Spring MVC 的 footer nav fragment
+    router.push() ≈ 页面跳转
+    与 SidebarNav 共享 NAV_ITEMS 数据源，保证导航项一致性
+-->
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { NAV_ITEMS } from '@constants'
@@ -14,6 +22,7 @@ import type { Component } from 'vue'
 const route = useRoute()
 const router = useRouter()
 
+/** 图标名 → lucide 组件的映射表 */
 const iconMap: Record<string, Component> = {
   LayoutDashboard,
   Bot,
@@ -23,8 +32,10 @@ const iconMap: Record<string, Component> = {
   Settings,
 }
 
+/** 判断当前路由是否属于指定路径，用于高亮当前导航项 */
 const isActive = (path: string) => route.path.startsWith(path)
 
+/** 根据常量中的 icon 名称获取 lucide 组件 */
 function getIcon(name: string): Component {
   return iconMap[name] || Bot
 }
@@ -38,6 +49,7 @@ function getIcon(name: string): Component {
     ]"
   >
     <div class="mx-auto flex max-w-2xl items-center justify-center gap-1 px-2 py-1">
+      <!-- 遍历 NAV_ITEMS 渲染导航按钮 -->
       <button
         v-for="item in NAV_ITEMS"
         :key="item.path"

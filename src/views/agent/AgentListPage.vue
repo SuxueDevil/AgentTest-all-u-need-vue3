@@ -1,4 +1,9 @@
-<!-- Agent 列表页 — 搜索 / 分页 / 新建 / 编辑 / 删除 -->
+<!--
+  Agent 列表页 — 搜索 / 分页 / 新建 / 编辑 / 删除。
+  【Java 类比】≈ AgentController.list() 返回的 Thymeleaf 列表页面
+    useAgentStore() ≈ @Autowired AgentService
+    fetchAgents() ≈ service.page(queryDTO)
+-->
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -9,6 +14,7 @@ import StatusBadge from '@components/common/StatusBadge.vue'
 import ConfirmDialog from '@components/common/ConfirmDialog.vue'
 
 const router = useRouter()
+/** 【Java 类比】≈ @Autowired AgentService，所有数据操作通过 Store 代理 */
 const agentStore = useAgentStore()
 
 /** 根据 Agent 名称生成唯一色相（0~360），同一名称始终同一色调 */
@@ -77,13 +83,20 @@ const typeLabels: Record<string, string> = {
 
 // ==================== 生命周期 ====================
 
+/**
+ * 页面加载时获取第一页数据。
+ * 【Java 类比】≈ @PostConstruct 初始化 → service.page(defaultParams)
+ */
 onMounted(() => {
-  agentStore.fetchAgents()   // 页面加载时获取第一页数据
+  agentStore.fetchAgents()
 })
 
 // ==================== CRUD 操作 ====================
 
-/** 打开新建弹窗 — 清空表单和编辑目标 */
+/**
+ * 打开新建弹窗 — 清空表单和编辑目标。
+ * 【Java 类比】≈ GET /agents/new → 返回空白表单
+ */
 function openCreate() {
   editTarget.value = null
   form.value = { name: '', description: '', model: '', type: 'llm',
@@ -91,7 +104,10 @@ function openCreate() {
   showCreateDialog.value = true
 }
 
-/** 打开编辑弹窗 — 用 Agent 数据填充表单 */
+/**
+ * 打开编辑弹窗 — 用 Agent 数据填充表单。
+ * 【Java 类比】≈ GET /agents/{id}/edit → 返回预填充的编辑表单
+ */
 function openEdit(agent: Agent) {
   editTarget.value = agent
   form.value = {
@@ -112,7 +128,10 @@ function confirmDelete(agent: Agent) {
   showDeleteDialog.value = true
 }
 
-/** 提交表单 — 新建和编辑共用 */
+/**
+ * 提交表单 — 新建和编辑共用。
+ * 【Java 类比】≈ POST/PUT /api/agents → AgentController.create() 或 update()
+ */
 async function handleSubmit() {
   submitting.value = true
   try {
