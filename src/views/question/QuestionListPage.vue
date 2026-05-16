@@ -261,7 +261,7 @@ const deleteMessage = computed(() => {
           <Download :size="14" />
           导出
         </button>
-        <button class="btn-primary" @click="openCreate">
+        <button class="btn-secondary" @click="openCreate">
           <Plus :size="16" />
           新建问题
         </button>

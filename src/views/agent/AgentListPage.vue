@@ -5,7 +5,7 @@
     fetchAgents() ≈ service.page(queryDTO)
 -->
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import { useAgentStore } from '@stores'
@@ -52,7 +52,7 @@ const editTarget = ref<Agent | null>(null)
 /** 表单绑定数据 */
 const form = ref({
   name: '', description: '', model: '', type: 'llm',
-  endpointUrl: '', requestBody: '', responseContentPath: '',
+  endpointUrl: '', requestBody: '', responseProtocol: 'auto', responseContentPath: '',
   authType: 'none', authCredential: '',
 })
 /** 鉴权凭证 placeholder，custom 模式显示 JSON 示例 */
@@ -62,6 +62,25 @@ const authPlaceholder = computed(() => {
 })
 /** 提交进行中标识，防止重复提交 */
 const submitting = ref(false)
+/** 表单校验错误 */
+const formError = ref('')
+
+/** 名称关键词匹配描述 — 新建时自动填入 */
+watch(() => form.value.name, (name) => {
+  if (editTarget.value || form.value.description) return
+  const map: Record<string, string> = {
+    '推理': '评测Agent的逻辑推理能力，包括三段论、归因分析、辩证思维等',
+    '编程': '评测Agent的编程能力，包括算法实现、代码调试、系统设计等',
+    '翻译': '评测Agent的翻译质量，评估中英互译的准确度和流畅度',
+    '摘要': '评测Agent的信息摘要能力，评估关键信息提取和压缩质量',
+    '综合': '多维度综合评测，覆盖推理、编程、翻译、问答等核心能力',
+    '角色': '评测Agent的角色扮演和人格一致性，评估对话自然度和角色贴合度',
+  }
+  for (const [key, desc] of Object.entries(map)) {
+    if (name.includes(key)) { form.value.description = desc; return }
+  }
+})
+
 /** 搜索关键词 */
 const searchKeyword = ref('')
 
@@ -99,9 +118,10 @@ onMounted(() => {
  * 【Java 类比】≈ GET /agents/new → 返回空白表单
  */
 function openCreate() {
+  formError.value = ''
   editTarget.value = null
   form.value = { name: '', description: '', model: '', type: 'llm',
-    endpointUrl: '', requestBody: '', responseContentPath: '', authType: 'none', authCredential: '' }
+    endpointUrl: '', requestBody: '', responseProtocol: 'auto', responseContentPath: '', authType: 'none', authCredential: '' }
   showCreateDialog.value = true
 }
 
@@ -118,6 +138,7 @@ function openEdit(agent: Agent) {
     type: agent.type,
     endpointUrl: agent.endpointUrl || '',
     requestBody: agent.requestBody || '',
+    responseProtocol: agent.responseProtocol || 'auto',
     responseContentPath: agent.responseContentPath || '',
     authType: agent.authType || 'none',
     authCredential: '',                                         // 编辑时不回填凭证
@@ -136,6 +157,10 @@ function confirmDelete(agent: Agent) {
  * 【Java 类比】≈ POST/PUT /api/agents → AgentController.create() 或 update()
  */
 async function handleSubmit() {
+  // 前端必填校验
+  if (!form.value.name.trim()) { formError.value = '请填写 Agent 名称'; return }
+  if (!form.value.type) { formError.value = '请选择 Agent 类型'; return }
+  formError.value = ''
   submitting.value = true
   try {
     const payload: Partial<Agent> = {
@@ -145,6 +170,7 @@ async function handleSubmit() {
       type: form.value.type as Agent['type'],
       endpointUrl: form.value.endpointUrl,
       requestBody: form.value.requestBody,
+      responseProtocol: form.value.responseProtocol,
       responseContentPath: form.value.responseContentPath,
       authType: form.value.authType,
       authCredential: form.value.authCredential,
@@ -194,7 +220,7 @@ function onPageChange(page: number) {
         <h1 class="text-2xl font-bold font-heading">Agent管理</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">管理待评测的AI Agent</p>
       </div>
-      <button class="btn-primary" @click="openCreate">
+      <button class="btn-secondary" @click="openCreate">
         <Plus :size="16" />
         新建Agent
       </button>
@@ -283,7 +309,7 @@ function onPageChange(page: number) {
 
     <!-- 新建/编辑弹窗 — 点击遮罩关闭 -->
     <div v-if="showCreateDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showCreateDialog = false">
-      <div class="bg-white dark:bg-ai-card rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white dark:bg-ai-card rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 class="text-lg font-bold">{{ editTarget ? '编辑Agent' : '新建Agent' }}</h2>
         <div class="space-y-3">
           <!-- 名称 -->
@@ -303,7 +329,7 @@ function onPageChange(page: number) {
               <input v-model="form.model" class="input-field" placeholder="如 gpt-4o" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型 *</label>
               <select v-model="form.type" class="input-field">
                 <option value="llm">大语言模型</option>
                 <option value="multi-modal">多模态</option>
@@ -318,14 +344,31 @@ function onPageChange(page: number) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Endpoint</label>
             <input v-model="form.endpointUrl" class="input-field" placeholder="https://api.example.com/v1/chat" />
           </div>
-          <!-- 请求模板 + 响应路径 -->
+          <!-- 请求模板 -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">请求模板 JSON <span class="text-xs text-gray-400">（&#123;&#123;messages&#125;&#125; 占位符）</span></label>
-            <textarea v-model="form.requestBody" class="input-field" rows="4" placeholder='留空则使用默认 OpenAI 格式：{"messages":[...],"max_tokens":1024}' />
+            <textarea v-model="form.requestBody" class="input-field" rows="3" placeholder='留空则使用默认 OpenAI 格式' />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">响应提取路径</label>
-            <input v-model="form.responseContentPath" class="input-field" placeholder="留空默认 choices[0].message.content" />
+          <!-- 响应协议 + 提取路径 -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">响应协议</label>
+              <select v-model="form.responseProtocol" class="input-field">
+                <option value="auto">自动识别</option>
+                <option value="sse">SSE 流式</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">响应提取路径</label>
+              <input v-model="form.responseContentPath" class="input-field" placeholder="留空默认 choices[0].message.content" />
+              <div class="flex flex-wrap gap-1 mt-1.5">
+                <button v-for="p in ['choices[0].message.content','choices[0].delta.content','data.text','data.reply','content']" :key="p"
+                  class="text-xs px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:border-ai-purple hover:text-ai-purple transition-colors font-mono"
+                  @click="form.responseContentPath = p;"
+                >{{ p }}</button>
+              </div>
+            </div>
           </div>
           <!-- 鉴权方式 + 凭证 -->
           <div class="grid grid-cols-2 gap-3">
@@ -348,10 +391,11 @@ function onPageChange(page: number) {
         <!-- 按钮 -->
         <div class="flex justify-end gap-3 pt-2">
           <button class="btn-secondary" @click="showCreateDialog = false">取消</button>
-          <button class="btn-primary" :disabled="submitting || !form.name" @click="handleSubmit">
+          <button class="btn-secondary" :disabled="submitting" @click="handleSubmit">
             {{ submitting ? '保存中...' : '保存' }}
           </button>
         </div>
+        <div v-if="formError" class="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">{{ formError }}</div>
       </div>
     </div>
 

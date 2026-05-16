@@ -178,7 +178,7 @@ const totalWeight = computed(() =>
         <h1 class="text-2xl font-bold font-heading">评测任务</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">创建和管理 Agent 评测任务</p>
       </div>
-      <button class="btn-primary" @click="openCreate">
+      <button class="btn-secondary" @click="openCreate">
         <Plus :size="16" />
         新建任务
       </button>
