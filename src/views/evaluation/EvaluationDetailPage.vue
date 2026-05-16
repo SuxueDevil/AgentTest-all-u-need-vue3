@@ -104,9 +104,9 @@ const sortedResults = computed(() =>
             class="btn-secondary text-sm text-yellow-600" @click="handleCancel">
             <Square :size="14" /> 取消
           </button>
-          <button v-if="evalStore.currentTask.status === 'completed'"
+          <button v-if="evalStore.currentTask.status === 'completed' || evalStore.currentTask.status === 'running'"
             class="btn-secondary text-sm" @click="loadResults">
-            查看结果
+            {{ evalStore.currentTask.status === 'running' ? '刷新结果' : '查看结果' }}
           </button>
         </div>
       </div>
@@ -146,13 +146,12 @@ const sortedResults = computed(() =>
               :class="i === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 dark:bg-ai-surface text-gray-500'">
               #{{ i + 1 }}
             </span>
-            <span class="flex-1 font-medium">{{ r.agentName }}</span>
-            <div class="flex items-center gap-4 text-sm">
-              <span class="font-mono font-bold" :class="r.passed ? 'text-green-500' : 'text-red-500'">
+            <span class="flex-1 font-semibold text-base">{{ r.agentName }}</span>
+            <div class="flex items-center gap-4">
+              <span class="font-mono font-bold text-2xl" :class="r.passed ? 'text-green-500' : 'text-red-500'">
                 {{ (r.overallScore * 100).toFixed(1) }}%
               </span>
-              <span class="text-gray-400">{{ r.avgLatencyMs }}ms</span>
-              <span class="text-gray-400">{{ (r.totalTokens / 1000).toFixed(0) }}k tokens</span>
+              <span class="text-sm text-gray-400">{{ r.avgLatencyMs }}ms | {{ (r.totalTokens / 1000).toFixed(0) }}k tokens</span>
             </div>
             <span :class="r.passed ? 'badge-success' : 'badge-error'">
               {{ r.passed ? '通过' : '未通过' }}
@@ -161,28 +160,52 @@ const sortedResults = computed(() =>
           <!-- 维度得分 -->
           <div class="flex flex-wrap gap-2 pl-12">
             <span v-for="ds in r.dimensionScores" :key="ds.dimensionName"
-              class="text-xs px-2 py-0.5 rounded-full"
+              class="text-sm px-3 py-1 rounded-full font-medium"
               :class="ds.score >= 0.6 ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'"
             >
               {{ ds.dimensionName }}: {{ (ds.score * 100).toFixed(0) }}%
             </span>
           </div>
           <!-- 逐题明细 -->
-          <details v-if="r.items?.length" class="pl-12">
-            <summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-600">逐题明细 ({{ r.items.length }} 题)</summary>
-            <div class="mt-2 space-y-1">
-              <div v-for="item in r.items" :key="item.questionId"
-                class="flex items-center justify-between text-xs text-gray-500 py-1"
-              >
-                <span class="truncate flex-1 mr-4">{{ item.questionTitle }}</span>
-                <span class="w-12 text-right">{{ (item.score * 100).toFixed(0) }}%</span>
-                <span class="w-16 text-right">{{ item.latencyMs }}ms</span>
-                <span :class="item.passed ? 'text-green-500' : 'text-red-500'" class="w-10 text-right">
-                  {{ item.passed ? '通过' : '失败' }}
+          <div v-if="r.items?.length" class="pl-8 space-y-3 border-l-2 border-gray-100 dark:border-gray-800">
+            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wide">逐题明细</h4>
+            <div v-for="item in r.items" :key="item.questionId"
+              class="rounded-lg border border-gray-100 dark:border-gray-800 p-3 space-y-2 text-sm"
+            >
+              <!-- 题目 + 得分 -->
+              <div class="flex items-center justify-between gap-4">
+                <span class="font-semibold flex-1">{{ item.questionTitle }}</span>
+                <span class="text-sm text-gray-400">{{ item.latencyMs }}ms | {{ item.tokensUsed }} tokens</span>
+                <span class="font-mono font-bold text-xl" :class="item.passed ? 'text-green-500' : 'text-red-500'">
+                  {{ (item.score * 100).toFixed(0) }}% {{ item.passed ? '✓' : '✗' }}
                 </span>
               </div>
+              <!-- 维度得分 + Judge 理由 -->
+              <div v-if="item.dimensionScores?.length" class="space-y-3">
+                <div v-for="ds in item.dimensionScores" :key="ds.dimensionName">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2 h-2 rounded-full flex-shrink-0"
+                      :class="ds.score >= 0.8 ? 'bg-green-500' : ds.score >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'" />
+                    <span class="font-bold text-gray-800 dark:text-gray-100">{{ ds.dimensionName }}</span>
+                    <span class="font-mono font-bold text-base" :class="ds.score >= 0.8 ? 'text-green-600' : ds.score >= 0.6 ? 'text-yellow-600' : 'text-red-500'">
+                      {{ (ds.score * 100).toFixed(0) }}%
+                    </span>
+                    <span class="text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0"
+                      :class="ds.score >= 0.8 ? 'bg-green-100 text-green-700' : ds.score >= 0.6 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'">
+                      {{ ds.score >= 0.8 ? '优' : ds.score >= 0.6 ? '良' : '差' }}
+                    </span>
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-300 text-[15px] leading-relaxed pl-4">{{ ds.feedback }}</p>
+                </div>
+              </div>
+              <!-- Agent 原文 -->
+              <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <p class="text-sm font-semibold text-gray-500 mb-1">Agent 回答原文</p>
+                <pre v-if="item.rawResponse" class="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-ai-surface rounded-lg p-3 max-h-40 overflow-y-auto whitespace-pre-wrap leading-relaxed">{{ item.rawResponse }}</pre>
+                <p v-else class="text-sm text-gray-400 italic">暂无回答内容</p>
+              </div>
             </div>
-          </details>
+          </div>
         </div>
       </div>
     </div>

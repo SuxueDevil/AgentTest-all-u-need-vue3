@@ -67,6 +67,9 @@ export interface ResultItem {
   passed: boolean
   latencyMs: number
   tokensUsed: number
+  /** Agent 原始回答（截断前500字） */
+  rawResponse: string
+  /** 各维度得分 + Judge 反馈理由 */
   dimensionScores: DimensionScore[]
 }
 

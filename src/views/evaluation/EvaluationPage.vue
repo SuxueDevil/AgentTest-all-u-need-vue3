@@ -1,6 +1,6 @@
 <!-- 评测任务列表页 — 搜索 / 状态筛选 / 分页 / 新建任务 / 启动 / 取消 / 删除 -->
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Search, Trash2, Play, Square, RotateCcw } from 'lucide-vue-next'
 import { useEvaluationStore, useQuestionStore, useAgentStore } from '@stores'
@@ -64,11 +64,28 @@ const statusLabels: Record<TaskStatus, string> = {
 
 // ==================== 生命周期 ====================
 
+/** 自动刷新定时器 — 有 running 任务时每 3s 刷新列表 */
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
+function startAutoRefresh() {
+  if (refreshTimer) return
+  refreshTimer = setInterval(async () => {
+    await evalStore.fetchTasks()
+    if (!evalStore.tasks.some(t => t.status === 'running')) stopAutoRefresh()
+  }, 3000)
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null }
+}
+
 onMounted(() => {
   evalStore.fetchTasks()
-  questionStore.fetchQuestions({ pageSize: 200 })  // 选题时用
-  agentStore.fetchAgents({ pageSize: 100 })         // 选Agent时用
+  questionStore.fetchQuestions({ pageSize: 200 })
+  agentStore.fetchAgents({ pageSize: 100 })
 })
+
+onUnmounted(() => stopAutoRefresh())
 
 // ==================== 创建任务 ====================
 
@@ -142,6 +159,7 @@ async function handleDelete() {
 
 async function handleStart(task: EvaluationTask) {
   await evalStore.startTask(task.id)
+  startAutoRefresh()
 }
 
 async function handleRestart(task: EvaluationTask) {
