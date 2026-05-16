@@ -19,6 +19,8 @@ export interface Agent {
   endpointUrl: string
   /** 请求模板 JSON，{{messages}} 占位符 */
   requestBody: string
+  /** 响应协议: sse / json / auto */
+  responseProtocol: string
   /** 响应内容提取路径，如 choices[0].message.content */
   responseContentPath: string
   /** 鉴权方式（不含凭证值） */

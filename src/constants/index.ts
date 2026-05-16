@@ -74,7 +74,7 @@ export const DIFFICULTY_LEVELS = {
 export const NAV_ITEMS = [
   { path: '/dashboard', label: '仪表盘', icon: 'LayoutDashboard' },
   { path: '/agents', label: 'Agent管理', icon: 'Bot' },
-  { path: '/questions', label: '题库管理', icon: 'BookOpen' },
+  { path: '/questions', label: '题库管理', icon: 'MessageSquare' },
   { path: '/evaluation', label: '评测任务', icon: 'ClipboardCheck' },
   { path: '/datasets', label: '数据集', icon: 'Database' },
   { path: '/reports', label: '评测报告', icon: 'FileText' },
