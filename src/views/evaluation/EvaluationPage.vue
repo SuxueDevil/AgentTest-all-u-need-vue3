@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Search, Trash2, Play, Square, RotateCcw } from 'lucide-vue-next'
+import { Plus, Search, Trash2, Play, Square, RotateCcw, X } from 'lucide-vue-next'
 import { useEvaluationStore, useQuestionStore, useAgentStore } from '@stores'
 import type { EvaluationTask, TaskStatus, DimensionConfig } from '@types'
 import StatusBadge from '@components/common/StatusBadge.vue'
@@ -206,6 +206,12 @@ const totalWeight = computed(() =>
       </button>
     </div>
 
+    <!-- 错误提示 -->
+    <div v-if="evalStore.error" class="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+      <span>{{ evalStore.error }}</span>
+      <button class="p-0.5 hover:text-red-800 dark:hover:text-red-200" @click="evalStore.error = null"><X :size="14" /></button>
+    </div>
+
     <!-- 筛选栏 -->
     <div class="flex items-center gap-3">
       <select v-model="filterStatus" class="input-field w-32 text-sm" @change="onSearch">
@@ -373,6 +379,7 @@ const totalWeight = computed(() =>
     <ConfirmDialog
       :show="showDeleteDialog"
       title="确认删除"
+      variant="danger"
       :message="`确定要删除任务「${deleteTarget?.name}」吗？此操作不可撤销。`"
       :loading="deleting"
       @confirm="handleDelete"

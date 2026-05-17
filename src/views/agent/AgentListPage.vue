@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Search, Pencil, Trash2, X } from 'lucide-vue-next'
 import { useAgentStore } from '@stores'
 import type { Agent } from '@types'
 import StatusBadge from '@components/common/StatusBadge.vue'
@@ -233,6 +233,12 @@ function onPageChange(page: number) {
       </button>
     </div>
 
+    <!-- 错误提示 -->
+    <div v-if="agentStore.error" class="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+      <span>{{ agentStore.error }}</span>
+      <button class="p-0.5 hover:text-red-800 dark:hover:text-red-200" @click="agentStore.error = null"><X :size="14" /></button>
+    </div>
+
     <!-- 搜索栏 -->
     <div class="flex items-center gap-3">
       <div class="relative flex-1 max-w-sm">
@@ -416,6 +422,7 @@ function onPageChange(page: number) {
     <ConfirmDialog
       :show="showDeleteDialog"
       title="确认删除"
+      variant="danger"
       :message="`确定要删除 Agent「${deleteTarget?.name}」吗？此操作不可撤销。`"
       @confirm="handleDelete"
       @cancel="showDeleteDialog = false"

@@ -556,6 +556,7 @@ const deleteMessage = computed(() => {
     <ConfirmDialog
       :show="showDeleteDialog"
       title="确认删除"
+      variant="danger"
       :message="deleteMessage"
       @confirm="handleDelete"
       @cancel="showDeleteDialog = false"

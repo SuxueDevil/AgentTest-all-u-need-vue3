@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { useAppStore } from '@stores/modules/app'
 import AppLayout from '@layouts/AppLayout.vue'
-
-const appStore = useAppStore()
 </script>
 
 <template>
