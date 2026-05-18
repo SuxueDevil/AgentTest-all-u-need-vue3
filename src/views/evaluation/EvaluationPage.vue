@@ -30,19 +30,30 @@ const filterStatus = ref('')
 
 // ==================== 新建表单 ====================
 
+/** 单选 Agent ID，null=不选 */
+const selectedAgentId = ref<number | null>(null)
+/** 单选 LLM ID，null=不选 */
+const selectedLLMId = ref<number | null>(null)
+
 const canProceed = computed(() => {
   if (submitting.value) return false
   if (!form.value.name) return false
   if (form.value.questionIds.length === 0) return false
-  if (form.value.agentIds.length === 0 && form.value.llmIds.length === 0) return false
+  if (!selectedAgentId.value && !selectedLLMId.value) return false
   return true
 })
+
+function selectAgent(id: number) {
+  selectedAgentId.value = selectedAgentId.value === id ? null : id
+}
+
+function selectLLM(id: number) {
+  selectedLLMId.value = selectedLLMId.value === id ? null : id
+}
 
 const form = ref({
   name: '', description: '',
   questionIds: [] as number[],
-  agentIds: [] as number[],
-  llmIds: [] as number[],
   dimensions: [
     { name: 'accuracy', displayName: '准确性', weight: 0.30, threshold: 0.6 },
     { name: 'efficiency', displayName: '效率', weight: 0.20, threshold: 0.5 },
@@ -104,8 +115,6 @@ function openCreate() {
   form.value = {
     name: '', description: '',
     questionIds: [],
-    agentIds: [],
-    llmIds: [],
     dimensions: [
       { name: 'accuracy', displayName: '准确性', weight: 0.30, threshold: 0.6 },
       { name: 'efficiency', displayName: '效率', weight: 0.20, threshold: 0.5 },
@@ -113,6 +122,8 @@ function openCreate() {
       { name: 'satisfaction', displayName: '用户满意度', weight: 0.25, threshold: 0.6 },
     ],
   }
+  selectedAgentId.value = null
+  selectedLLMId.value = null
   showCreateDialog.value = true
 }
 
@@ -122,16 +133,13 @@ function toggleQuestion(id: number) {
   else { form.value.questionIds.splice(idx, 1) }
 }
 
-function toggleAgent(id: number) {
-  const idx = form.value.agentIds.indexOf(id)
-  if (idx === -1) { form.value.agentIds.push(id) }
-  else { form.value.agentIds.splice(idx, 1) }
-}
-
-function toggleLLM(id: number) {
-  const idx = form.value.llmIds.indexOf(id)
-  if (idx === -1) { form.value.llmIds.push(id) }
-  else { form.value.llmIds.splice(idx, 1) }
+/** 全选/取消全选题目 */
+function toggleAllQuestions() {
+  if (form.value.questionIds.length === questionStore.questions.length) {
+    form.value.questionIds = []
+  } else {
+    form.value.questionIds = questionStore.questions.map(q => q.id)
+  }
 }
 
 function addDimension() {
@@ -149,8 +157,8 @@ async function handleSubmit() {
       name: form.value.name,
       description: form.value.description,
       questionIds: form.value.questionIds,
-      agentIds: form.value.agentIds,
-      llmIds: form.value.llmIds,
+      agentIds: selectedAgentId.value ? [selectedAgentId.value] : [],
+      llmIds: selectedLLMId.value ? [selectedLLMId.value] : [],
       dimensions: form.value.dimensions.filter(d => d.name && d.displayName),
     })
     showCreateDialog.value = false
@@ -415,40 +423,46 @@ const totalWeight = computed(() =>
         <div class="grid grid-cols-3 gap-3">
           <div class="space-y-1">
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择题目 <span class="text-xs text-gray-400">({{ form.questionIds.length }})</span></label>
-            <div class="max-h-48 overflow-y-auto space-y-0.5 border rounded-lg p-1.5">
+            <div class="max-h-48 overflow-y-auto space-y-0 border rounded-lg">
+              <div class="sticky top-0 z-10 bg-gray-50 dark:bg-ai-surface border-b px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                @click="toggleAllQuestions"
+              >
+                <span class="text-xs text-ai-purple font-medium">
+                  {{ form.questionIds.length === questionStore.questions.length ? '取消全选' : '全选' }}
+                </span>
+              </div>
               <div v-for="q in questionStore.questions" :key="q.id"
-                class="flex items-center gap-1.5 text-xs py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
+                class="flex items-center gap-1.5 text-xs py-1 px-2 hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
                 @click="toggleQuestion(q.id)"
               >
-                <input type="checkbox" :checked="form.questionIds.includes(q.id)" class="rounded scale-90" />
+                <input type="checkbox" :checked="form.questionIds.includes(q.id)" class="rounded scale-90" @click.prevent />
                 <span class="flex-1 truncate">{{ q.title }}</span>
-                <span class="text-xs px-1 rounded" :class="q.questionType === 'multi' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'">{{ q.questionType === 'multi' ? '多轮' : '单轮' }}</span>
+                <span class="text-xs px-1 rounded flex-shrink-0" :class="q.questionType === 'multi' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'">{{ q.questionType === 'multi' ? '多轮' : '单轮' }}</span>
               </div>
             </div>
           </div>
           <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择 Agent <span class="text-xs text-gray-400">({{ form.agentIds.length }})</span></label>
-            <div class="max-h-48 overflow-y-auto space-y-0.5 border rounded-lg p-1.5">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择 Agent <span v-if="selectedAgentId" class="text-xs text-ai-purple">(1)</span></label>
+            <div class="max-h-48 overflow-y-auto space-y-0 border rounded-lg">
               <div v-for="a in agentStore.agents" :key="a.id"
-                class="flex items-center gap-1.5 text-xs py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
-                @click="toggleAgent(a.id)"
+                class="flex items-center gap-1.5 text-xs py-1 px-2 hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
+                @click="selectAgent(a.id)"
               >
-                <input type="checkbox" :checked="form.agentIds.includes(a.id)" class="rounded scale-90" />
-                <span class="flex-1">{{ a.name }}</span>
-                <span class="text-xs text-gray-400">{{ a.model }}</span>
+                <input type="checkbox" :checked="selectedAgentId === a.id" class="scale-90 flex-shrink-0" @click.stop />
+                <span class="flex-1 truncate min-w-0">{{ a.name }}</span>
               </div>
             </div>
           </div>
           <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择 LLM <span class="text-xs text-gray-400">({{ form.llmIds.length }})</span></label>
-            <div class="max-h-48 overflow-y-auto space-y-0.5 border rounded-lg p-1.5">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">选择 LLM <span v-if="selectedLLMId" class="text-xs text-ai-purple">(1)</span></label>
+            <div class="max-h-48 overflow-y-auto space-y-0 border rounded-lg">
               <div v-for="l in llmStore.llms" :key="l.id"
-                class="flex items-center gap-1.5 text-xs py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
-                @click="toggleLLM(l.id)"
+                class="flex items-center gap-1.5 text-xs py-1 px-2 hover:bg-gray-50 dark:hover:bg-ai-surface cursor-pointer"
+                @click="selectLLM(l.id)"
               >
-                <input type="checkbox" :checked="form.llmIds.includes(l.id)" class="rounded scale-90" />
-                <span class="flex-1">{{ l.name }}</span>
-                <span class="text-xs text-gray-400">{{ l.model }}</span>
+                <input type="checkbox" :checked="selectedLLMId === l.id" class="scale-90 flex-shrink-0" @click.stop />
+                <span class="flex-1 truncate min-w-0">{{ l.name }}</span>
+                <span class="text-xs text-gray-400 flex-shrink-0 truncate">{{ l.model }}</span>
               </div>
             </div>
           </div>
