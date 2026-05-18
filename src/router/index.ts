@@ -71,35 +71,19 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@views/evaluation/EvaluationDetailPage.vue'),
     meta: { title: '评测详情', icon: 'ClipboardCheck', hidden: true },
   },
-  {
-    path: '/comparison',
-    name: 'Comparison',
-    component: () => import('@views/evaluation/ComparisonPage.vue'),
-    meta: { title: '对比分析', icon: 'GitCompare', hidden: true },
-  },
+
   {
     path: '/questions',
     name: 'Questions',
     component: () => import('@views/question/QuestionListPage.vue'),
     meta: { title: '题库管理', icon: 'BookOpen' },
   },
-  {
-    path: '/datasets',
-    name: 'Datasets',
-    component: () => import('@views/evaluation/DatasetPage.vue'),
-    meta: { title: '数据集', icon: 'Database' },
-  },
+
   {
     path: '/reports',
     name: 'Reports',
     component: () => import('@views/report/ReportPage.vue'),
     meta: { title: '评测报告', icon: 'FileText' },
-  },
-  {
-    path: '/system',
-    name: 'System',
-    component: () => import('@views/system/SystemPage.vue'),
-    meta: { title: '系统设置', icon: 'Settings' },
   },
   {
     /**

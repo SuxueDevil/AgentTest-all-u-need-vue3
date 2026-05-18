@@ -11,9 +11,7 @@ import {
   Cpu,
   BookOpen,
   ClipboardCheck,
-  Database,
   FileText,
-  Settings,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
@@ -27,9 +25,7 @@ const iconMap: Record<string, Component> = {
   Cpu,
   BookOpen,
   ClipboardCheck,
-  Database,
   FileText,
-  Settings,
 }
 
 /** 判断当前路由是否属于指定路径，用于高亮当前导航项 */
