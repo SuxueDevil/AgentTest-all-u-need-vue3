@@ -119,12 +119,12 @@ export const useEvaluationStore = defineStore('evaluation', () => {
   /**
    * 启动评测。
    * 【Java 类比】≈ EvaluationServiceImpl.start(id)，触发异步执行
+   * 注：不自动调用 fetchTasks()，由调用方按需刷新列表（列表页自刷新 / 详情页不需要）
    */
   async function startTask(id: number) {
     error.value = null
     try {
       await evaluationApi.start(id)
-      await fetchTasks()
     } catch (e: any) {
       error.value = e?.message || '启动评测失败'
       throw e
@@ -172,6 +172,26 @@ export const useEvaluationStore = defineStore('evaluation', () => {
   }
 
   /**
+   * 静默刷新所有 running 任务的进度（只调 progress 轻量接口，不走分页查询）。
+   * 用于列表页轮询进度条，更新 completedCount 和 status 到现有 tasks 数组上。
+   * 【Java 类比】≈ EvaluationServiceImpl.getProgress(id)，返回 TaskProgressVO
+   */
+  async function refreshRunningProgress() {
+    const runningTasks = tasks.value.filter(t => t.status === 'running')
+    for (const task of runningTasks) {
+      try {
+        const p = await evaluationApi.progress(task.id)
+        if (p) {
+          task.completedCount = p.completedCount
+          if (p.status && p.status !== task.status) {
+            task.status = p.status as typeof task.status
+          }
+        }
+      } catch { /* 静默忽略单条失败 */ }
+    }
+  }
+
+  /**
    * 获取评测结果 — 按 Agent 分组返回各维度得分。
    * 【Java 类比】≈ EvaluationServiceImpl.getResults(id)，返回 List<AgentResult>
    */
@@ -189,6 +209,6 @@ export const useEvaluationStore = defineStore('evaluation', () => {
   return {
     tasks, total, loading, error, currentTask, results, progress, queryParams,
     fetchTasks, fetchTaskDetail, createTask, updateTask, deleteTask,
-    startTask, restartTask, cancelTask, fetchProgress, fetchResults,
+    startTask, restartTask, cancelTask, fetchProgress, fetchResults, refreshRunningProgress,
   }
 })

@@ -68,13 +68,16 @@ const statusLabels: Record<TaskStatus, string> = {
 
 // ==================== 生命周期 ====================
 
-/** 自动刷新定时器 — 有 running 任务时每 3s 刷新列表 */
+/**
+ * 自动刷新定时器 — 有 running 任务时每 3s 调 progress 轻量接口更新进度条。
+ * 不触发全量分页查询，进度 100% 后自动停止。
+ */
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 function startAutoRefresh() {
   if (refreshTimer) return
   refreshTimer = setInterval(async () => {
-    await evalStore.fetchTasks({}, true)
+    await evalStore.refreshRunningProgress()
     if (!evalStore.tasks.some(t => t.status === 'running')) stopAutoRefresh()
   }, 3000)
 }

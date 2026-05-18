@@ -65,6 +65,8 @@ export interface DimensionScore {
 export interface ResultItem {
   questionId: number
   questionTitle: string
+  /** 多轮对话轮次序号（1-based），单轮为 null */
+  turnOrder?: number
   score: number
   passed: boolean
   latencyMs: number
