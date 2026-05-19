@@ -307,7 +307,7 @@ const totalWeight = computed(() =>
 
     <!-- 筛选栏 -->
     <div class="flex items-center gap-3">
-      <DropdownSelect v-model="filterStatus" :options="statusOptions" placeholder="状态" width-class="w-32" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterStatus" :options="statusOptions" placeholder="状态" width-class="w-24" :clearable="true" @change="onSearch" />
       <button class="btn-secondary text-sm" @click="onSearch">筛选</button>
     </div>
 

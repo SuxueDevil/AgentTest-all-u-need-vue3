@@ -303,9 +303,9 @@ const deleteMessage = computed(() => {
           @keyup.enter="onSearch"
         />
       </div>
-      <DropdownSelect v-model="filterCategory" :options="categoryOptions" placeholder="分类" width-class="w-28" :clearable="true" @change="onSearch" />
-      <DropdownSelect v-model="filterDifficulty" :options="difficultyOptions" placeholder="难度" width-class="w-28" :clearable="true" @change="onSearch" />
-      <DropdownSelect v-model="filterType" :options="typeOptions" placeholder="类型" width-class="w-28" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterCategory" :options="categoryOptions" placeholder="分类" width-class="w-22" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterDifficulty" :options="difficultyOptions" placeholder="难度" width-class="w-22" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterType" :options="typeOptions" placeholder="类型" width-class="w-22" :clearable="true" @change="onSearch" />
       <button class="btn-secondary text-sm" @click="onSearch">搜索</button>
 
       <!-- 批量删除 -->
