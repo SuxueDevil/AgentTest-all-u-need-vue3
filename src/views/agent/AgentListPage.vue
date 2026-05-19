@@ -193,7 +193,7 @@ function openEdit(agent: Agent) {
     responseProtocol: agent.responseProtocol || 'sse',
     responseContentPath: agent.responseContentPath || '',
     authType: agent.authType || 'none',
-    authCredential: '',                                         // 后端脱敏不返回，编辑时留空=不修改
+    authCredential: agent.authCredential || '',
   }
   showCreateDialog.value = true
 }
