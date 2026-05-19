@@ -58,6 +58,13 @@ const filterCategory = ref('')
 const filterDifficulty = ref('')
 const filterType = ref('')
 
+/** DropdownSelect 选项列表 */
+const categoryOptions = computed(() => Object.entries(categoryLabels).map(([value, label]) => ({ value, label })))
+const difficultyOptions = computed(() => Object.entries(difficultyLabels).map(([value, label]) => ({ value, label })))
+const typeOptions = computed(() => Object.entries(questionTypeLabels).map(([value, label]) => ({ value, label })))
+const roleOptions = [{ value: 'user', label: 'User（用户）' }, { value: 'assistant', label: 'Assistant（助手）' }]
+const countOptions = [1, 3, 5, 10, 20].map(n => ({ value: n, label: `${n} 道` }))
+
 // ==================== 批量选择 ====================
 
 const selectedIds = ref(new Set<number>())
@@ -296,19 +303,9 @@ const deleteMessage = computed(() => {
           @keyup.enter="onSearch"
         />
       </div>
-      <select v-model="filterCategory" class="input-field w-28 text-sm" @change="onSearch">
-        <option value="">全部分类</option>
-        <option v-for="(label, key) in categoryLabels" :key="key" :value="key">{{ label }}</option>
-      </select>
-      <select v-model="filterDifficulty" class="input-field w-28 text-sm" @change="onSearch">
-        <option value="">全部难度</option>
-        <option v-for="(label, key) in difficultyLabels" :key="key" :value="key">{{ label }}</option>
-      </select>
-      <select v-model="filterType" class="input-field w-28 text-sm" @change="onSearch">
-        <option value="">全部类型</option>
-        <option value="single">单轮</option>
-        <option value="multi">多轮</option>
-      </select>
+      <DropdownSelect v-model="filterCategory" :options="categoryOptions" placeholder="分类" width-class="w-28" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterDifficulty" :options="difficultyOptions" placeholder="难度" width-class="w-28" :clearable="true" @change="onSearch" />
+      <DropdownSelect v-model="filterType" :options="typeOptions" placeholder="类型" width-class="w-28" :clearable="true" @change="onSearch" />
       <button class="btn-secondary text-sm" @click="onSearch">搜索</button>
 
       <!-- 批量删除 -->
@@ -416,24 +413,17 @@ const deleteMessage = computed(() => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">分类</label>
-              <select v-model="form.category" class="input-field">
-                <option v-for="(label, key) in categoryLabels" :key="key" :value="key">{{ label }}</option>
-              </select>
+              <DropdownSelect v-model="form.category" :options="categoryOptions" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">难度</label>
-              <select v-model="form.difficulty" class="input-field">
-                <option v-for="(label, key) in difficultyLabels" :key="key" :value="key">{{ label }}</option>
-              </select>
+              <DropdownSelect v-model="form.difficulty" :options="difficultyOptions" />
             </div>
           </div>
           <!-- 问题类型 -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型</label>
-            <select v-model="form.questionType" class="input-field" @change="onTypeChange">
-              <option value="single">单轮</option>
-              <option value="multi">多轮</option>
-            </select>
+            <DropdownSelect v-model="form.questionType" :options="typeOptions" @change="onTypeChange" />
           </div>
           <!-- 期望答案 -->
           <div>
@@ -460,10 +450,7 @@ const deleteMessage = computed(() => {
                 <X :size="14" />
               </button>
               <div class="text-xs text-gray-400">第 {{ turn.turnOrder }} 轮</div>
-              <select v-model="turn.role" class="input-field text-sm">
-                <option value="user">User（用户）</option>
-                <option value="assistant">Assistant（助手）</option>
-              </select>
+              <DropdownSelect v-model="turn.role" :options="roleOptions" />
               <textarea v-model="turn.content" class="input-field" rows="2" :placeholder="turn.role === 'user' ? '用户消息...' : '助手回复...'" />
             </div>
           </div>
@@ -508,28 +495,19 @@ const deleteMessage = computed(() => {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">分类</label>
-            <select v-model="genForm.category" class="input-field text-sm">
-              <option v-for="(label, key) in categoryLabels" :key="key" :value="key">{{ label }}</option>
-            </select>
+            <DropdownSelect v-model="genForm.category" :options="categoryOptions" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">难度</label>
-            <select v-model="genForm.difficulty" class="input-field text-sm">
-              <option v-for="(label, key) in difficultyLabels" :key="key" :value="key">{{ label }}</option>
-            </select>
+            <DropdownSelect v-model="genForm.difficulty" :options="difficultyOptions" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型</label>
-            <select v-model="genForm.questionType" class="input-field text-sm">
-              <option value="single">单轮</option>
-              <option value="multi">多轮</option>
-            </select>
+            <DropdownSelect v-model="genForm.questionType" :options="typeOptions" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">数量</label>
-            <select v-model.number="genForm.count" class="input-field text-sm">
-              <option v-for="n in [1,3,5,10,20]" :key="n" :value="n">{{ n }} 道</option>
-            </select>
+            <DropdownSelect v-model="genForm.count" :options="countOptions" />
           </div>
         </div>
         <div>

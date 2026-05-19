@@ -78,6 +78,11 @@ const statusLabels: Record<TaskStatus, string> = {
   pending: '等待中', running: '进行中', completed: '已完成', cancelled: '已取消', failed: '失败',
 }
 
+/** DropdownSelect 选项 */
+const statusOptions = computed(() =>
+  Object.entries(statusLabels).map(([value, label]) => ({ value, label }))
+)
+
 // ==================== 生命周期 ====================
 
 /**
@@ -302,10 +307,7 @@ const totalWeight = computed(() =>
 
     <!-- 筛选栏 -->
     <div class="flex items-center gap-3">
-      <select v-model="filterStatus" class="input-field w-32 text-sm" @change="onSearch">
-        <option value="">全部状态</option>
-        <option v-for="(label, key) in statusLabels" :key="key" :value="key">{{ label }}</option>
-      </select>
+      <DropdownSelect v-model="filterStatus" :options="statusOptions" placeholder="状态" width-class="w-32" :clearable="true" @change="onSearch" />
       <button class="btn-secondary text-sm" @click="onSearch">筛选</button>
     </div>
 

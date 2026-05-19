@@ -56,6 +56,27 @@ const form = ref({
   endpointUrl: '', requestBody: '', responseProtocol: 'sse', responseContentPath: 'choices[0].delta.content',
   authType: 'none', authCredential: '',
 })
+
+/** DropdownSelect 选项 */
+const agentTypeOptions = [
+  { value: 'llm', label: '大语言模型' },
+  { value: 'multi-modal', label: '多模态' },
+  { value: 'tool-use', label: '工具调用' },
+  { value: 'code-gen', label: '代码生成' },
+  { value: 'rag', label: 'RAG' },
+]
+const protocolOptions = [
+  { value: 'auto', label: '自动识别' },
+  { value: 'sse', label: 'SSE 流式' },
+  { value: 'json', label: 'JSON' },
+]
+const authTypeOptions = [
+  { value: 'none', label: '无' },
+  { value: 'bearer', label: 'Bearer Token' },
+  { value: 'api_key', label: 'API Key' },
+  { value: 'basic', label: 'Basic Auth' },
+  { value: 'custom', label: '自定义Header' },
+]
 /** 鉴权凭证 placeholder，custom 模式显示 JSON 示例 */
 const authPlaceholder = computed(() => {
   if (form.value.authType === 'custom') return `{"x-access-token":"tok","X-App-Code":"123"}`
@@ -346,13 +367,7 @@ function onPageChange(page: number) {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型 *</label>
-              <select v-model="form.type" class="input-field">
-                <option value="llm">大语言模型</option>
-                <option value="multi-modal">多模态</option>
-                <option value="tool-use">工具调用</option>
-                <option value="code-gen">代码生成</option>
-                <option value="rag">RAG</option>
-              </select>
+              <DropdownSelect v-model="form.type" :options="agentTypeOptions" />
             </div>
           </div>
           <!-- 请求格式 -->
@@ -373,11 +388,7 @@ function onPageChange(page: number) {
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">响应协议</label>
-              <select v-model="form.responseProtocol" class="input-field">
-                <option value="auto">自动识别</option>
-                <option value="sse">SSE 流式</option>
-                <option value="json">JSON</option>
-              </select>
+              <DropdownSelect v-model="form.responseProtocol" :options="protocolOptions" />
             </div>
             <div class="col-span-2">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">答案位置</label>
@@ -394,13 +405,7 @@ function onPageChange(page: number) {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">鉴权方式</label>
-              <select v-model="form.authType" class="input-field">
-                <option value="none">无</option>
-                <option value="bearer">Bearer Token</option>
-                <option value="api_key">API Key</option>
-                <option value="basic">Basic Auth</option>
-                <option value="custom">自定义Header</option>
-              </select>
+              <DropdownSelect v-model="form.authType" :options="authTypeOptions" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">鉴权凭证</label>
