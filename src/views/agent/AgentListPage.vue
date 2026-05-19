@@ -77,6 +77,20 @@ const authTypeOptions = [
   { value: 'basic', label: 'Basic Auth' },
   { value: 'custom', label: '自定义Header' },
 ]
+/** 格式化请求模板 JSON（{{messages}} 占位符先替换后还原） */
+function formatRequestBody() {
+  try {
+    const raw = form.value.requestBody
+    if (!raw.trim()) return
+    // 占位符替换为合法 JSON 值，格式化后还原
+    const PLACEHOLDER = '"__MESSAGES_PLACEHOLDER__"'
+    const formatted = JSON.stringify(JSON.parse(raw.replace('{{messages}}', PLACEHOLDER)), null, 2)
+    form.value.requestBody = formatted.replace(PLACEHOLDER, '{{messages}}')
+  } catch {
+    // JSON 不合法或含占位符，静默失败
+  }
+}
+
 /** 鉴权凭证 placeholder，custom 模式显示 JSON 示例 */
 const authPlaceholder = computed(() => {
   if (form.value.authType === 'custom') return `{"x-access-token":"tok","X-App-Code":"123"}`
@@ -170,7 +184,7 @@ function openEdit(agent: Agent) {
     responseProtocol: agent.responseProtocol || 'sse',
     responseContentPath: agent.responseContentPath || '',
     authType: agent.authType || 'none',
-    authCredential: '',                                         // 编辑时不回填凭证
+    authCredential: '',                                         // 后端脱敏不返回，编辑时留空=不修改
   }
   showCreateDialog.value = true
 }
@@ -379,8 +393,11 @@ function onPageChange(page: number) {
           </div>
           <!-- 请求模板 -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">请求模板 JSON <span class="text-xs text-gray-400">（&#123;&#123;messages&#125;&#125; 占位符）</span></label>
-            <textarea v-model="form.requestBody" class="input-field" rows="3" placeholder='留空则使用默认 OpenAI 格式' />
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">请求模板 JSON <span class="text-xs text-gray-400">（&#123;&#123;messages&#125;&#125; 占位符）</span></label>
+              <button type="button" class="text-xs text-ai-purple hover:underline" @click="formatRequestBody">格式化</button>
+            </div>
+            <textarea v-model="form.requestBody" class="input-field" rows="6" placeholder='{"model":"...","messages":{{messages}},"stream":true} — 留空使用默认格式' />
           </div>
           <!-- 响应格式 -->
           <h3 class="text-sm font-bold text-gray-900 dark:text-white pt-2">● 响应格式</h3>
