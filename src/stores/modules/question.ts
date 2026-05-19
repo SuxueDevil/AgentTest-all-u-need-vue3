@@ -106,7 +106,7 @@ export const useQuestionStore = defineStore('question', () => {
     }
   }
 
-  async function generateQuestions(params: { category: string; difficulty: string; questionType: string; count: number }) {
+  async function generateQuestions(params: { category: string; difficulty: string; questionType: string; count: number; turnCount?: number; roleContext?: string }) {
     error.value = null
     try {
       await questionApi.generate(params)

@@ -37,7 +37,7 @@ const editTarget = ref<Question | null>(null)
 /** AI 生成弹窗 */
 const showGenerateDialog = ref(false)
 const generating = ref(false)
-const genForm = ref({ category: 'reasoning', difficulty: 'medium', questionType: 'single', count: 5, topic: '' })
+const genForm = ref({ category: 'qa', difficulty: 'medium', questionType: 'single', count: 1, turnCount: 3, topic: '', roleContext: '' })
 
 // ==================== 表单状态 ====================
 
@@ -64,6 +64,7 @@ const difficultyOptions = computed(() => Object.entries(difficultyLabels).map(([
 const typeOptions = computed(() => Object.entries(questionTypeLabels).map(([value, label]) => ({ value, label })))
 const roleOptions = [{ value: 'user', label: 'User（用户）' }, { value: 'assistant', label: 'Assistant（助手）' }]
 const countOptions = [1, 3, 5, 10, 20].map(n => ({ value: n, label: `${n} 道` }))
+const turnCountOptions = [2, 3, 5, 7, 10].map(n => ({ value: n, label: `${n} 轮` }))
 
 // ==================== 批量选择 ====================
 
@@ -509,16 +510,25 @@ const deleteMessage = computed(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">数量</label>
             <DropdownSelect v-model="genForm.count" :options="countOptions" />
           </div>
+          <!-- 多轮时显示轮数选择 -->
+          <div v-if="genForm.questionType === 'multi'">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">轮数</label>
+            <DropdownSelect v-model="genForm.turnCount" :options="turnCountOptions" />
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主题（可选）</label>
-          <input v-model="genForm.topic" class="input-field text-sm" placeholder="如 医疗问诊、金融分析、法律咨询" />
+          <input v-model="genForm.topic" class="input-field text-sm" placeholder="如 医疗问诊、金融分析、编程面试" />
           <div class="flex flex-wrap gap-1 mt-1.5">
-            <button v-for="t in ['医疗问诊','金融分析','法律咨询','编程面试','客户服务','教育培训']" :key="t"
+            <button v-for="t in ['医疗问诊','金融分析','编程面试','客户服务','教育培训']" :key="t"
               class="text-xs px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:border-ai-purple hover:text-ai-purple transition-colors"
               @click="genForm.topic = t"
             >{{ t }}</button>
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">角色场景（可选）</label>
+          <textarea v-model="genForm.roleContext" class="input-field text-sm" rows="3" placeholder="描述被评测 Agent 的角色定位，如：健康助理，不替医生做决定，不回答专业医疗知识" />
         </div>
         <!-- 生成进度 -->
         <div v-if="generating" class="flex items-center gap-3 py-3 px-4 rounded-lg bg-ai-purple/5 border border-ai-purple/20">

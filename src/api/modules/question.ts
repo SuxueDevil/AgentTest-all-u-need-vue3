@@ -50,8 +50,8 @@ export const questionApi = {
     return `/api/questions/export?format=${format}`
   },
 
-  /** POST /api/questions/generate — AI 生成题目 */
-  generate(params: { category: string; difficulty: string; questionType: string; count: number }) {
+  /** POST /api/questions/generate — AI 生成题目，turnCount 仅多轮时有效，roleContext 可选角色场景 */
+  generate(params: { category: string; difficulty: string; questionType: string; count: number; turnCount?: number; roleContext?: string }) {
     return post<Question[]>('/questions/generate', params)
   },
 }
