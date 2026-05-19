@@ -1,84 +1,61 @@
 /**
- * Agent 相关的类型定义
- * =============================================================================
- * 【Java 对照】
- *   interface  ≈  Java 的 interface（但 TS 的 interface 也可以描述数据形状）
- *   type       ≈  Java 的 enum（字符串字面量联合类型）或 typedef/alias
- *
- * 【Python 对照】
- *   interface  ≈  Python 的 Protocol 或 TypedDict
- *   type       ≈  Python 的 Literal 类型联合
- *
- * TS 核心概念：
- *   ? 标记 = 可选属性，相当于 Java 的 @Nullable 或 Python 的 Optional
- *   string[] = 字符串数组，相当于 Java 的 List<String> 或 Python 的 list[str]
+ * Agent 相关类型定义 — 与后端 com.agenttest.pojo 包下的 VO / DTO 对应。
+ * 前端通过这些接口获得类型提示，编译期即可发现字段不匹配。
  */
 
-/** Agent 实体 — 系统中评测的基本单元 */
+/**
+ * Agent 实体 — 对应后端 AgentVO。
+ * 注意: 详情接口不返回 authCredential（后端 VO 已脱敏），
+ * 仅创建/编辑时前端可传入此字段。
+ */
 export interface Agent {
-  id: string
+  id: number
   name: string
   description: string
   model: string
-  /** Agent 类型，限定为预定义的几种类型之一 */
   type: AgentType
-  /** Agent 当前状态 */
   status: AgentStatus
-  /** 评测指标，嵌套对象 */
-  metrics: AgentMetrics
-  /** 标签列表，string[] = 字符串数组 */
-  tags: string[]
+  /** Agent API 端点 URL */
+  endpointUrl: string
+  /** 请求模板 JSON，{{messages}} 占位符 */
+  requestBody: string
+  /** 响应协议: sse / json / auto */
+  responseProtocol: string
+  /** 响应内容提取路径，如 choices[0].message.content */
+  responseContentPath: string
+  /** 鉴权方式（不含凭证值） */
+  authType: string
+  /** 鉴权凭证（仅创建/编辑表单填写，列表和详情不返回） */
+  authCredential: string
   createdAt: string
   updatedAt: string
 }
 
-/**
- * Agent 类型 — 字面量联合类型 (Union Type)
- * ---------------------------------------------------------------------------
- * 【核心概念】这是一种"字符串枚举"的轻量写法：
- *   - 变量只能是这几个字符串值之一
- *   - 编译器会做穷尽性检查（switch 漏了分支会报错）
- *
- * 【Java 类比】相当于一个 String 类型的 enum:
- *   enum AgentType { LLM, MULTI_MODAL, TOOL_USE, CODE_GEN, RAG }
- *
- * 【Python 类比】相当于 typing.Literal:
- *   AgentType = Literal["llm", "multi-modal", "tool-use", "code-gen", "rag"]
- */
+/** Agent 类型 — 对应数据库 agent.type 字段 */
 export type AgentType = 'llm' | 'multi-modal' | 'tool-use' | 'code-gen' | 'rag'
 
-/** Agent 状态 */
+/** Agent 状态 — 对应数据库 agent.status 字段 */
 export type AgentStatus = 'active' | 'inactive' | 'evaluating' | 'error'
 
-/** Agent 评测指标 — 5 个维度的评分 */
-export interface AgentMetrics {
-  /** 准确率 0-1 */
-  accuracy: number
-  /** 响应延迟 (ms) */
-  latency: number
-  /** 推理能力 0-1 */
-  reasoning: number
-  /** 创造性 0-1 */
-  creativity: number
-  /** 鲁棒性 0-1 */
-  robustness: number
-  /** 综合评分 0-1 */
-  overall: number
-}
-
 /**
- * Agent 查询参数 — 列表接口的请求参数
- * ---------------------------------------------------------------------------
- * 带 ? 的属性是可选的，传不传都可以。
- * 【Java 类比】相当于一个 Request DTO + @Nullable 注解
- * 【Python 类比】相当于给函数传 **kwargs，有些 key 可以省略
+ * Agent 列表查询参数 — 对应后端 AgentQueryDTO。
+ * page 和 pageSize 必传（有默认值），其余可选。
  */
 export interface AgentQueryParams {
   page: number
   pageSize: number
+  /** 模糊搜索，匹配 name 和 description */
   keyword?: string
+  /** 按类型筛选 */
   type?: AgentType
+  /** 按状态筛选 */
   status?: AgentStatus
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
+}
+
+/** 分页结果 — 对应后端 PageResult<T> */
+export interface PageResult<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
 }

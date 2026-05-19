@@ -37,14 +37,13 @@ export const TASK_STATUS = {
   failed: '失败',
 } as const
 
-/** 数据集类别的显示名称 */
-export const DATASET_CATEGORIES = {
-  reasoning: '推理能力',
-  coding: '编程能力',
-  qa: '问答能力',
-  translation: '翻译能力',
-  summarization: '摘要能力',
-  'tool-calling': '工具调用能力',
+/** 问题分类的显示名称 */
+export const QUESTION_CATEGORIES = {
+  reasoning: '推理',
+  coding: '编程',
+  qa: '问答',
+  translation: '翻译',
+  summarization: '摘要',
 } as const
 
 /** 难度等级的显示名称 */
@@ -63,10 +62,11 @@ export const DIFFICULTY_LEVELS = {
  * 【Java 类比】≈ List<NavItem> 的静态初始化
  */
 export const NAV_ITEMS = [
-  { path: '/dashboard', label: '仪表盘', icon: 'LayoutDashboard' },
   { path: '/agents', label: 'Agent管理', icon: 'Bot' },
+  { path: '/llms', label: 'LLM模型', icon: 'Cpu' },
+  { path: '/questions', label: '题库管理', icon: 'BookOpen' },
+  { path: '/dashboard', label: '仪表盘', icon: 'LayoutDashboard' },
   { path: '/evaluation', label: '评测任务', icon: 'ClipboardCheck' },
-  { path: '/datasets', label: '数据集', icon: 'Database' },
   { path: '/reports', label: '评测报告', icon: 'FileText' },
-  { path: '/system', label: '系统设置', icon: 'Settings' },
+  { path: '/relax', label: '休息一下', icon: 'Coffee' },
 ] as const

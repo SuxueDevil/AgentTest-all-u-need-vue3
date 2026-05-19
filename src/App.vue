@@ -1,31 +1,23 @@
 <script setup lang="ts">
-import { useAppStore } from '@stores/modules/app'
 import AppLayout from '@layouts/AppLayout.vue'
-
-const appStore = useAppStore()
 </script>
 
 <template>
   <AppLayout>
     <router-view v-slot="{ Component, route }">
-      <transition name="page" mode="out-in">
-        <component :is="Component" :key="route.path" />
-      </transition>
+      <component :is="Component" :key="route.path" class="page-animate" />
     </router-view>
   </AppLayout>
 </template>
 
 <style>
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+/* 页面切换动画 — 原生 CSS animation，绕过 Vue transition 的渲染时机问题 */
+.page-animate {
+  animation: page-in 0.6s ease;
 }
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+
+@keyframes page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 </style>

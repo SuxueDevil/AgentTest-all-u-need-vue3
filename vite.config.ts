@@ -32,10 +32,8 @@ export default defineConfig({
       '@api': fileURLToPath(new URL('src/api', import.meta.url)),
       '@assets': fileURLToPath(new URL('src/assets', import.meta.url)),
       '@components': fileURLToPath(new URL('src/components', import.meta.url)),
-      '@composables': fileURLToPath(new URL('src/composables', import.meta.url)),
       '@config': fileURLToPath(new URL('src/config', import.meta.url)),
       '@constants': fileURLToPath(new URL('src/constants', import.meta.url)),
-      '@hooks': fileURLToPath(new URL('src/hooks', import.meta.url)),
       '@layouts': fileURLToPath(new URL('src/layouts', import.meta.url)),
       '@router': fileURLToPath(new URL('src/router', import.meta.url)),
       '@stores': fileURLToPath(new URL('src/stores', import.meta.url)),
@@ -81,7 +79,7 @@ export default defineConfig({
           // Vue 生态核心库（vue + vue-router + pinia）→ vue-vendor.[hash].js
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
           // ECharts 图表库（体积较大，单独拆分）→ echarts-vendor.[hash].js
-          'echarts-vendor': ['echarts', 'vue-echarts'],
+          'echarts-vendor': ['echarts'],
         },
       },
     },

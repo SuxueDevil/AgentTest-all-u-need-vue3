@@ -44,6 +44,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Agent管理', icon: 'Bot' },
   },
   {
+    path: '/llms',
+    name: 'LLMs',
+    component: () => import('@views/llm/LLMListPage.vue'),
+    meta: { title: 'LLM模型', icon: 'Cpu' },
+  },
+  {
     path: '/agents/:id',
     // :id 是动态路由参数（Path Variable）
     // 例如 /agents/123 → 组件内通过 route.params.id 获取 "123"
@@ -65,18 +71,14 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@views/evaluation/EvaluationDetailPage.vue'),
     meta: { title: '评测详情', icon: 'ClipboardCheck', hidden: true },
   },
+
   {
-    path: '/comparison',
-    name: 'Comparison',
-    component: () => import('@views/evaluation/ComparisonPage.vue'),
-    meta: { title: '对比分析', icon: 'GitCompare', hidden: true },
+    path: '/questions',
+    name: 'Questions',
+    component: () => import('@views/question/QuestionListPage.vue'),
+    meta: { title: '题库管理', icon: 'BookOpen' },
   },
-  {
-    path: '/datasets',
-    name: 'Datasets',
-    component: () => import('@views/evaluation/DatasetPage.vue'),
-    meta: { title: '数据集', icon: 'Database' },
-  },
+
   {
     path: '/reports',
     name: 'Reports',
@@ -84,10 +86,10 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '评测报告', icon: 'FileText' },
   },
   {
-    path: '/system',
-    name: 'System',
-    component: () => import('@views/system/SystemPage.vue'),
-    meta: { title: '系统设置', icon: 'Settings' },
+    path: '/relax',
+    name: 'Relax',
+    component: () => import('@views/relax/RelaxPage.vue'),
+    meta: { title: '休息一下', icon: 'Coffee' },
   },
   {
     /**
